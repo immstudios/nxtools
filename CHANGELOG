@@ -1,0 +1,42 @@
+0.8.8
+ - fixed encoding
+ - added some regexps
+
+0.6.0
+ - FFMpeg as submodule
+ - CasparCG Controller
+ - ElementTree XML parser (xml function)
+
+0.5.7
+ - case insensitive extension filtering in get_files
+ - exception handling in ffmpeg progress handlers
+ - watchfolder updates, get_size function
+ - get_guid function
+
+0.5.6
+ - fixed ffmpeg marking
+
+0.5.5
+ - to_unicode function
+ - better slugifier
+ - ffanalyser refactored, video/audio selection
+
+0.5.4
+ - encode_if_py3
+
+0.5.3
+ - ffmpeg analyser
+ - more stuff
+
+0.5.2
+ - ffmpeg.FFMPEG class introduced
+ - README is now rst
+ - ffmpeg debug mode
+ - ffanalyse reworked
+
+0.5.1
+ - set status to alpha
+ - better function names in files module
+
+0.5
+ - Initial release
