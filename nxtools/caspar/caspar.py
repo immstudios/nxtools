@@ -2,7 +2,7 @@ import telnetlib
 
 from nxtools import logging, log_traceback, PYTHON_VERSION, decode_if_py3, encode_if_py3
 
-__all__ = ["CasparCG"]
+__all__ = ["CasparCG", "CasparResponse"]
 
 class CasparResponse(object):
     """Caspar query response object"""
@@ -35,29 +35,30 @@ class CasparResponse(object):
 
 class CasparCG(object):
     """CasparCG client object"""
-    def __init__(self, host, port=5250):
+    def __init__(self, host, port=5250, timeout=5):
         assert isinstance(port, int) and port <= 65535, "Invalid port number"
         self.host = host
         self.port = port
+        self.timeout = timeout
         self.connection = False
 
     def connect(self):
         """Create connection to CasparCG Server"""
         try:
-            self.connection = telnetlib.Telnet(self.host, self.port)
+            self.connection = telnetlib.Telnet(self.host, self.port, timeout=self.timeout)
         except Exception:
             log_traceback()
             return False
         return True
 
-    def query(self, query):
+    def query(self, query, **kwargs):
         """Send AMCP command"""
         if not self.connection:
             if not self.connect():
                 return CasparResponse(500, "Unable to connect CasparCG server")
 
         query = query.strip()
-        if not query.startswith("INFO"):
+        if not query.startswith("INFO") or kwargs.get("verbose", True):
             logging.debug("Executing AMCP: {}".format(query))
         query += "\r\n"
 

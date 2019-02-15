@@ -1,3 +1,9 @@
+1.0
+ - repository clean-up
+ - gmt option in format_time
+ - custom query verbosity in casparcg
+ - casparcg connection timeout
+
 0.8.8
  - fixed encoding
  - added some regexps

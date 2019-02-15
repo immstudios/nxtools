@@ -6,10 +6,10 @@ def read(fname):
 
 setup(
     name = "nxtools",
-    version = "1.0.0",
+    version = "1.0.1",
     author = "Martin Wacker",
     author_email = "martas@imm.cz",
-    description = "Set of common utilities and little helpers.",
+    description = "A set of utilities and helpers for media processing and content management",
     license = "MIT",
     keywords = "utilities log logging ffmpeg watchfolder media mam time",
     url = "https://github.com/immstudios/nxtools",
