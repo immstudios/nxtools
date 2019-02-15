@@ -20,3 +20,8 @@ Modules
 - **nxtools.misc** - string formating etc
 
 .. _Nebula: https://github.com/immstudios/nebula
+
+Examples
+--------
+
+ - [https://pastebin.com/5Fya2kep](Podcasts downloader)
