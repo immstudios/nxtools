@@ -24,4 +24,4 @@ Modules
 Examples
 --------
 
- - [https://pastebin.com/5Fya2kep](Podcasts downloader)
+ - [Podcasts downloader](https://pastebin.com/5Fya2kep)
