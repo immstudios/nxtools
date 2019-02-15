@@ -58,8 +58,9 @@ class CasparCG(object):
                 return CasparResponse(500, "Unable to connect CasparCG server")
 
         query = query.strip()
-        if not query.startswith("INFO") or kwargs.get("verbose", True):
-            logging.debug("Executing AMCP: {}".format(query))
+        if kwargs.get("verbose", True):
+            if not query.startswith("INFO"):
+                logging.debug("Executing AMCP: {}".format(query))
         query += "\r\n"
 
         if PYTHON_VERSION >= 3:
