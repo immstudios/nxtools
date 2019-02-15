@@ -24,4 +24,4 @@ Modules
 Examples
 --------
 
- - [Podcasts downloader](https://pastebin.com/5Fya2kep)
+ - `Podcasts downloader <https://pastebin.com/5Fya2kep>`_
