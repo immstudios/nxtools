@@ -32,7 +32,7 @@ import signal
 
 from nxtools.logging import *
 from nxtools.common import decode_if_py3, PYTHON_VERSION
-from nxtools.misc import indent
+from nxtools.text import indent
 
 __all__ = ["enable_ffmpeg_debug", "FFMPEG", "ffmpeg"]
 

@@ -2,7 +2,10 @@ import telnetlib
 
 from nxtools import logging, log_traceback, PYTHON_VERSION, decode_if_py3, encode_if_py3
 
-__all__ = ["CasparCG", "CasparResponse"]
+__all__ = [
+        "CasparCG",
+        "CasparResponse"
+    ]
 
 class CasparResponse(object):
     """Caspar query response object"""

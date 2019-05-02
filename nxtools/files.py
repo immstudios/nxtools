@@ -1,36 +1,3 @@
-# The MIT License (MIT)
-#
-# Copyright (c) 2015 - 2017 imm studios, z.s.
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-
-import os
-import tempfile
-import stat
-import uuid
-import time
-
-from .logging import *
-from .misc import slugify
-from .common import PYTHON_VERSION, get_guid
-
 __all__ = [
         "FileObject",
         "join_path",
@@ -42,6 +9,16 @@ __all__ = [
         "get_file_siblings",
         "WatchFolder"
     ]
+
+import os
+import tempfile
+import stat
+import uuid
+import time
+
+from .common import PYTHON_VERSION, get_guid
+from .logging import *
+from .text import slugify
 
 
 class FileObject(object):
@@ -109,6 +86,10 @@ class FileObject(object):
         if not "mode" in self.attrs:
             self.load_stat()
         return stat.S_ISREG(self["mode"])
+
+    @property
+    def is_file(self):
+        return os.path.isfile(self.path)
 
     @property
     def is_link(self):
@@ -230,7 +211,7 @@ def get_path_pairs(input_dir, output_dir, **kwargs):
                     output_dir,
                     *[slugify(f) for f in input_file.dir_name.split("/")] +
                     [slugify(input_file.base_name)]
-                    )
+                )
             if input_file.ext:
                 output_path += "." + input_file.ext
         else:

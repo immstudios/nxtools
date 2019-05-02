@@ -1,41 +1,60 @@
-# The MIT License (MIT)
-#
-# Copyright (c) 2015 - 2017 imm studios, z.s.
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
+__all__ = [
+        "datestr2ts",
+        "tc2s",
+        "s2time",
+        "f2tc",
+        "s2tc",
+        "s2words",
+        "format_time"
+    ]
 
 import time
 import datetime
 
-__all__ = ["datestr2ts", "tc2s", "s2time", "f2tc", "s2tc", "s2words", "format_time"]
-
 
 def datestr2ts(datestr, hh=0, mm=0, ss=0):
-    """Converts YYYY-MM-DD string to unix timestamp. Additionally hh, mm and ss params can be used"""
+    """
+    Converts YYYY-MM-DD string to unix timestamp.
+
+    By default, start of the day (midnight) is returned.
+
+    Parameters
+    ----------
+    hh : int
+        Hour
+    mm : int
+        Minute
+    ss : int
+        Second
+
+    Returns
+    -------
+    int
+        Parsed unix timestamp
+    """
     yy, mo, dd = [int(i) for i in datestr.split("-")]
     ttuple = [yy, mo, dd, hh, mm]
     dt = datetime.datetime(*ttuple)
-    tstamp = time.mktime(dt.timetuple())
+    tstamp = int(time.mktime(dt.timetuple()))
     return tstamp
 
+
 def tc2s(tc, base=25):
+    """
+    Converts SMPTE timecode (HH:MM:SS:FF) to number of seconds
+
+    Parameters
+    ----------
+    tc : str
+        Source timecode
+    base : float
+        Framerate
+
+    Returns
+    -------
+    float
+        Resulting value in seconds
+    """
     tc = tc.replace(";", ":")
     hh, mm, ss, ff = [int(e) for e in tc.split(":")]
     res = hh * 3600
@@ -44,8 +63,12 @@ def tc2s(tc, base=25):
     res += ff / float(base)
     return res
 
+
 def s2time(secs, show_secs=True, show_fracs=True):
-    """Converts seconds to time"""
+    """
+    Converts seconds to time
+    """
+
     try:
         secs = float(secs)
     except:
@@ -64,8 +87,11 @@ def s2time(secs, show_secs=True, show_fracs=True):
     return r
 
 
-def f2tc(f,base=25):
-    """Converts frames to timecode"""
+def f2tc(f, base=25):
+    """
+    Converts frames to a SMPTE timecode
+    """
+
     try:
         f = int(f)
     except:
@@ -77,8 +103,11 @@ def f2tc(f,base=25):
     return "{:02d}:{:02d}:{:02d}:{:02d}".format(hh, mm, ss, ff)
 
 
-def s2tc(s,base=25):
-    """Converts seconds to timecode"""
+def s2tc(s, base=25):
+    """
+    Converts seconds to timecode
+    """
+
     try:
         f = int(s*base)
     except:
@@ -92,6 +121,13 @@ def s2tc(s,base=25):
 
 
 def s2words(s):
+    """
+    Create textual (english) representation of given number of seconds
+
+    This function is useful for showing estimated time of a process.
+
+    """
+
     s = int(s)
     if s < 60:
         return "{} seconds".format(s)
@@ -104,7 +140,9 @@ def s2words(s):
 
 
 def format_time(timestamp, time_format="%Y-%m-%d %H:%M:%S", never_placeholder="never", gmt=False):
-    """strftime/localtime shortcut"""
+    """
+    Format unix timestamp to the local or GMT time
+    """
     if not timestamp:
         return never_placeholder
     return time.strftime(time_format, time.gmtime(timestamp) if gmt else time.localtime(timestamp))

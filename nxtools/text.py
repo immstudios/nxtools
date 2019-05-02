@@ -1,25 +1,15 @@
-# The MIT License (MIT)
-#
-# Copyright (c) 2015 - 2017 imm studios, z.s.
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
+__all__ = [
+        "to_unicode",
+        "indent",
+        "unaccent",
+        "slugify",
+        "string2color",
+        "fract2float",
+        "format_filesize",
+        "EMAIL_REGEXP",
+        "GUID_REGEXP"
+    ]
+
 
 import string
 
@@ -34,21 +24,12 @@ except ImportError:
         import unicodedata
 
 
-__all__ = [
-        "to_unicode",
-        "indent",
-        "unaccent",
-        "slugify",
-        "string2color",
-        "fract2float",
-        "format_filesize",
-        "EMAIL_REGEXP",
-        "GUID_REGEXP"
-    ]
-
-
+#: E-mail address regular expression
 EMAIL_REGEXP = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
+
+#: GUID/UUID regular expression
 GUID_REGEXP = r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+
 
 if PYTHON_VERSION < 3:
     default_slug_whitelist = string.letters + string.digits
@@ -57,9 +38,11 @@ else:
 slug_separator_whitelist = " ,./\\;:!|*^#@~+-_="
 
 
-
 def indent(src, l=4):
-    return "\n".join(["{}{}".format(l*" ", s.rstrip()) for s in src.split("\n")])
+    """
+    Indent given text
+    """
+    return "\n".join(["{}{}".format(l*" ", s.rstrip()) for s in src.split("\n")]) + "\n" if src.endswith("\n") else ""
 
 def to_unicode(string, encoding="utf-8"):
     if PYTHON_VERSION < 3:
@@ -81,6 +64,31 @@ def unaccent(string, encoding="utf-8"):
         return string #TODO
 
 def slugify(input_string, **kwargs):
+    """
+    Slugify a text string
+
+    This function removes transliterates input string to ASCII, removes special characters
+    and use join resulting elemets using specified separator.
+
+
+    Parameters
+    ----------
+    input_string : str
+
+    separator : string
+        Default "-"
+    lower : bool
+        convert the result to lowercase (default True)
+    make_set: bool
+        return "set" object instead of string
+    min_length: int
+        minimal length of an element (word)
+    slug_whitelist: str
+        characters allowed in the output (default ascii letters, digits and the separator)
+    split_chars:
+        set of characters used for word splitting (there is a sane default)
+
+    """
     separator = kwargs.get("separator", "-")
     lower = kwargs.get("lower", True)
     make_set = kwargs.get("make_set", False)
@@ -96,6 +104,9 @@ def slugify(input_string, **kwargs):
     return set(elements) if make_set else separator.join(elements)
 
 def string2color(string):
+    """
+    Generate more or less unique color for a given string
+    """
     h = 0
     for char in string:
         h = ord(char) + ((h << 5) - h)
@@ -111,6 +122,9 @@ def fract2float(fract):
         return 1
 
 def format_filesize(value):
+    """
+    Returns a human readable filesize for given byte count
+    """
     if not value:
         return ""
     for x in ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB']:

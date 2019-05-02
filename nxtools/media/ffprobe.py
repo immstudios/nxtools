@@ -29,7 +29,7 @@ import subprocess
 import signal
 
 from nxtools.common import decode_if_py3, string_types
-from nxtools.misc import indent
+from nxtools.text import indent
 from nxtools.logging import *
 from nxtools.files import FileObject
 

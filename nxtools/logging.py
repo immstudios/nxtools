@@ -1,44 +1,66 @@
-# The MIT License (MIT)
-#
-# Copyright (c) 2015 - 2017 imm studios, z.s.
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
+__all__ = [
+        "Logging",
+        "logging",
+        "log_traceback",
+        "critical_error",
+        "log_to_file"
+    ]
 
+import os
 import sys
 import time
 import traceback
+import functools
 
 from .common import PLATFORM
-from .misc import indent
+from .text import indent
 from .timeutils import format_time
-
-__all__ = ["logging", "log_traceback", "critical_error"]
-
 
 DEBUG, INFO, WARNING, ERROR, GOOD_NEWS = range(5)
 
+
+# Log handlers
+
+def null_handler(**kwargs):
+    return True
+
+
+def log_to_file(log_path):
+    def log_to_file_handler(path, **kwargs):
+        placeholders = {
+            "date" : format_time(time.time(), "%Y-%m-%d")
+        }
+        path = path.format(**placeholders)
+        dirname, fname = os.path.split(path)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+        with open(path, "a") as f:
+            tstamp = format_time(time.time())
+            ltype = {
+                   0 : "DEBUG    ",
+                   1 : "INFO     ",
+                   2 : "WARNING  ",
+                   3 : "ERROR    ",
+                   4 : "GOOD NEWS"
+                }[kwargs["message_type"]]
+            f.write("{}  {}  {}\n".format(tstamp, ltype, kwargs["message"]))
+
+    return functools.partial(log_to_file_handler, log_path)
+
+
+# Logging
+
 class Logging():
+    """
+    nxtools universal logger
+    """
     def __init__(self, user=""):
         self.show_time = False
+        self.show_colors = True
         self.user = user
         self.handlers = []
+        self.file = sys.stderr
         self.formats = {
             INFO      : "{2}INFO       {0} {1}",
             DEBUG     : "{2}\033[34mDEBUG      {0} {1}\033[0m",
@@ -47,7 +69,7 @@ class Logging():
             GOOD_NEWS : "{2}\033[32mGOOD NEWS\033[0m  {0} {1}"
             }
 
-        self.formats_win = {
+        self.formats_nocolor = {
             DEBUG     : "{2}DEBUG     {0} {1}",
             INFO      : "{2}INFO      {0} {1}",
             WARNING   : "{2}WARNING   {0} {1}",
@@ -68,18 +90,20 @@ class Logging():
         if kwargs.get("handlers", True):
             for handler in self.handlers:
                 handler(user=self.user, message_type=msgtype, message=message)
-        if PLATFORM == "unix":
+
+        colors = self.show_colors and PLATFORM == "unix"
+        if colors:
             if timestamp:
                 timestamp = "\033[1;30m{}\033[0m".format(timestamp)
             try:
-                print(self.formats[msgtype].format(user, message, timestamp))
+                print(self.formats[msgtype].format(user, message, timestamp), file=self.file)
             except Exception:
-                print(message.encode("utf-8"))
+                pass
         else:
             try:
-                print(self.formats_win[msgtype].format(user, message, timestamp))
+                print(self.formats_nocolor[msgtype].format(user, message, timestamp), file=self.file)
             except Exception:
-                print(message.encode("utf-8"))
+                pass
 
     def debug(self, *args, **kwargs):
         """Log debug message"""
@@ -105,12 +129,19 @@ logging = Logging()
 
 
 def log_traceback(message="Exception!", **kwargs):
+    """
+    Show current exception in log
+    """
     tb = traceback.format_exc()
     msg = "{}\n\n{}".format(message, indent(tb))
     logging.error(msg, **kwargs)
     return msg
 
+
 def critical_error(msg, **kwargs):
+    """
+    sys exit
+    """
     logging.error(msg, **kwargs)
     logging.debug("Critical error. Terminating program.")
     sys.exit(1)
