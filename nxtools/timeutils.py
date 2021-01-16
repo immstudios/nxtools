@@ -33,7 +33,7 @@ def datestr2ts(datestr, hh=0, mm=0, ss=0):
         Parsed unix timestamp
     """
     yy, mo, dd = [int(i) for i in datestr.split("-")]
-    ttuple = [yy, mo, dd, hh, mm]
+    ttuple = [yy, mo, dd, hh, mm, ss]
     dt = datetime.datetime(*ttuple)
     tstamp = int(time.mktime(dt.timetuple()))
     return tstamp
