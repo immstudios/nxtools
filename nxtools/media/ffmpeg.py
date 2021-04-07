@@ -182,7 +182,7 @@ def ffmpeg(*args, **kwargs):
 
     ff = FFMPEG(*args, **kwargs)
     ff.start(
-            stdin=kwargs.get("stdin", None),
+            stdin=kwargs.get("stdin", subprocess.PIPE),
             stdout=kwargs.get("stdout", None),
             stderr=kwargs.get("stderr", subprocess.PIPE)
         )
