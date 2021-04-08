@@ -77,13 +77,6 @@ class Logging():
             GOOD_NEWS : "\033[1;30m{timestamp}\033[0m\033[32m{type}\033[0m {user} {message}"
         }
 
-        self.formats_colorama = {
-            DEBUG     : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.BLUE   + "{type}"  +              "{user} {message}" + Style.RESET_ALL,
-            INFO      : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.WHITE  + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
-            WARNING   : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.YELLOW + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
-            ERROR     : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.RED    + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
-            GOOD_NEWS : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.GREEN  + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL
-        }
 
         self.formats_nocolor = {
             DEBUG     : "{timestamp}{type} {user} {message}",
@@ -92,6 +85,17 @@ class Logging():
             ERROR     : "{timestamp}{type} {user} {message}",
             GOOD_NEWS : "{timestamp}{type} {user} {message}"
         }
+
+        if has_colorama:
+            self.formats_colorama = {
+                DEBUG     : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.BLUE   + "{type}"  +              "{user} {message}" + Style.RESET_ALL,
+                INFO      : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.WHITE  + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
+                WARNING   : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.YELLOW + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
+                ERROR     : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.RED    + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
+                GOOD_NEWS : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.GREEN  + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL
+            }
+        else:
+            self.formats_colorama = self.formats_nocolor
 
     def add_handler(self, handler):
         if not handler in self.handlers:

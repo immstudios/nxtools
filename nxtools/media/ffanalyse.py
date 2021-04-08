@@ -1,26 +1,3 @@
-# The MIT License (MIT)
-#
-# Copyright (c) 2015 - 2017 imm studios, z.s.
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-
 from __future__ import print_function
 
 import os
@@ -29,7 +6,7 @@ import signal
 import subprocess
 
 from nxtools.logging import *
-from nxtools.common import decode_if_py3, PYTHON_VERSION
+from nxtools.version import PYTHON_VERSION
 from nxtools.media.ffmpeg import FFMPEG_DEBUG
 
 __all__ = ["FFAnalyse", "ffanalyse"]
@@ -63,10 +40,7 @@ class FFAnalyse():
         self.reset_stderr()
 
     def reset_stderr(self):
-        if PYTHON_VERSION < 3:
-            self.buff = ""
-        else:
-            self.buff = b""
+        self.buff = b""
         self.error_log = ""
 
     @staticmethod
@@ -124,18 +98,15 @@ class FFAnalyse():
         logging.debug("Executing", " ".join(self.cmd))
         self.proc = subprocess.Popen(self.cmd, stderr=subprocess.PIPE)
         silences = []
-        if PYTHON_VERSION < 3:
-            buff = ""
-        else:
-            buff = b""
+        buff = b""
         exp_tag = tags.pop(0)
         last_idet = ""
         while True:
             ch = self.proc.stderr.read(1)
             if not ch:
                 break
-            if ch in ["\n", "\r", b"\r", b"\n"]:
-                line = decode_if_py3(buff).strip()
+            if ch in [b"\r", b"\n"]:
+                line = buff.decode("utf-8").strip()
 
                 if line.startswith("[Parsed_ebur128"):
                     pass
@@ -166,10 +137,7 @@ class FFAnalyse():
                     self.error_log += line + "\n"
                 if self.debug:
                     print(line.rstrip())
-                if PYTHON_VERSION < 3:
-                    buff = ""
-                else:
-                    buff = b""
+                buff = b""
             else:
                 buff += ch
 
