@@ -16,8 +16,15 @@ from .common import PLATFORM
 from .text import indent
 from .timeutils import format_time
 
-DEBUG, INFO, WARNING, ERROR, GOOD_NEWS = range(5)
+try:
+    from colorama import Fore, Style, init
+    init()
+    has_colorama = True
+except ModuleNotFoundError:
+    has_colorama = False
 
+
+DEBUG, INFO, WARNING, ERROR, GOOD_NEWS = range(5)
 
 # Log handlers
 
@@ -56,26 +63,35 @@ class Logging():
     nxtools universal logger
     """
     def __init__(self, user=""):
-        self.show_time = False
+        self.show_time = True
         self.show_colors = True
         self.user = user
         self.handlers = []
         self.file = sys.stderr
-        self.formats = {
-            INFO      : "{2}INFO       {0} {1}",
-            DEBUG     : "{2}\033[34mDEBUG      {0} {1}\033[0m",
-            WARNING   : "{2}\033[33mWARNING\033[0m    {0} {1}",
-            ERROR     : "{2}\033[31mERROR\033[0m      {0} {1}",
-            GOOD_NEWS : "{2}\033[32mGOOD NEWS\033[0m  {0} {1}"
-            }
+
+        self.formats_ansi = {
+            INFO      : "\033[1;30m{timestamp}\033[0m{type} {user} {message}",
+            DEBUG     : "\033[1;30m{timestamp}\033[0m\033[34m{type} {user} {message}\033[0m",
+            WARNING   : "\033[1;30m{timestamp}\033[0m\033[33m{type}\033[0m {user} {message}",
+            ERROR     : "\033[1;30m{timestamp}\033[0m\033[31m{type}\033[0m {user} {message}",
+            GOOD_NEWS : "\033[1;30m{timestamp}\033[0m\033[32m{type}\033[0m {user} {message}"
+        }
+
+        self.formats_colorama = {
+            DEBUG     : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.BLUE   + "{type}"  +              "{user} {message}" + Style.RESET_ALL,
+            INFO      : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.WHITE  + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
+            WARNING   : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.YELLOW + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
+            ERROR     : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.RED    + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
+            GOOD_NEWS : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.GREEN  + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL
+        }
 
         self.formats_nocolor = {
-            DEBUG     : "{2}DEBUG     {0} {1}",
-            INFO      : "{2}INFO      {0} {1}",
-            WARNING   : "{2}WARNING   {0} {1}",
-            ERROR     : "{2}ERROR     {0} {1}",
-            GOOD_NEWS : "{2}GOOD NEWS {0} {1}"
-            }
+            DEBUG     : "{timestamp}{type} {user} {message}",
+            INFO      : "{timestamp}{type} {user} {message}",
+            WARNING   : "{timestamp}{type} {user} {message}",
+            ERROR     : "{timestamp}{type} {user} {message}",
+            GOOD_NEWS : "{timestamp}{type} {user} {message}"
+        }
 
     def add_handler(self, handler):
         if not handler in self.handlers:
@@ -84,41 +100,51 @@ class Logging():
     def _send(self, msgtype, *args, **kwargs):
         message = " ".join([str(arg) for arg in args])
         user = kwargs.get("user", self.user)
-        timestamp = format_time(time.time()) + " " if self.show_time else ""
-        if user:
-            user = " {:<15}".format(user)
+
         if kwargs.get("handlers", True):
             for handler in self.handlers:
                 handler(user=self.user, message_type=msgtype, message=message)
 
-        colors = self.show_colors and PLATFORM == "unix"
-        if colors:
-            if timestamp:
-                timestamp = "\033[1;30m{}\033[0m".format(timestamp)
-            try:
-                print(self.formats[msgtype].format(user, message, timestamp), file=self.file)
-            except Exception:
-                pass
+        ldata = {
+            "user" : " {:<15}".format(user) if user else "",
+            "message" : message,
+            "timestamp" :format_time(time.time()) + " " if self.show_time else "",
+            "type" : {
+                DEBUG     : "DEBUG     ",
+                INFO      : "INFO      ",
+                WARNING   : "WARNING   ",
+                ERROR     : "ERROR     ",
+                GOOD_NEWS : "GOOD NEWS "
+            }[msgtype]
+        }
+
+        if self.show_colors and has_colorama:
+            fstring = self.formats_colorama[msgtype]
+        elif self.show_colors and PLATFORM == "unix":
+            fstring = self.formats_ansi[msgtype]
         else:
-            try:
-                print(self.formats_nocolor[msgtype].format(user, message, timestamp), file=self.file)
-            except Exception:
-                pass
+            fstring = self.formats_nocolor[msgtype]
+
+        try:
+            print(fstring.format(**ldata), file=self.file)
+        except Exception:
+            pass
+
 
     def debug(self, *args, **kwargs):
-        """Log debug message"""
+        """Log a debug message"""
         self._send(DEBUG, *args, **kwargs)
 
     def info(self, *args, **kwargs):
-        """Log info message"""
+        """Log an info message"""
         self._send(INFO, *args, **kwargs)
 
     def warning(self, *args, **kwargs):
-        """Log warning message"""
+        """Log a warning message"""
         self._send(WARNING, *args, **kwargs)
 
     def error(self, *args, **kwargs):
-        """Log error message"""
+        """Log an error message"""
         self._send(ERROR, *args, **kwargs)
 
     def goodnews(self, *args, **kwargs):
@@ -129,8 +155,7 @@ logging = Logging()
 
 
 def log_traceback(message="Exception!", **kwargs):
-    """
-    Show current exception in log
+    """Log the current exception traceback
     """
     tb = traceback.format_exc()
     msg = "{}\n\n{}".format(message, indent(tb))
@@ -138,10 +163,9 @@ def log_traceback(message="Exception!", **kwargs):
     return msg
 
 
-def critical_error(msg, **kwargs):
-    """
-    sys exit
+def critical_error(msg, return_code=1, **kwargs):
+    """Log an error message and exit program.
     """
     logging.error(msg, **kwargs)
     logging.debug("Critical error. Terminating program.")
-    sys.exit(1)
+    sys.exit(return_code)

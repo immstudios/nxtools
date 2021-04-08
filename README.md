@@ -23,7 +23,7 @@ Log an error message and exit program.
 
 ### datestr2ts
 
-Converts YYYY-MM-DD string to unix timestamp.
+Converts a `YYYY-MM-DD` string to an unix timestamp.
 
 By default, start of the day (midnight) is returned.
 
@@ -62,7 +62,7 @@ Returns a human readable filesize for a given byte count
 
 ### format_time
 
-Format unix timestamp to the local or GMT time
+Formats unix timestamp to the local or GMT time
 
 
 ```
@@ -108,6 +108,22 @@ Args:
 ### get_guid
 
 Returns a GUID :)
+
+### get_path_pairs
+
+Crawls input_dir using get_files and yields tuples of input and output files.
+
+This function is useful for batch conversion, when you need to process files
+from `input_dir` and output the result to a `output_dir`.
+
+Most arguments are the same as for `get_files`. You can also specify a target extension,
+use a slugifier for the output path.
+
+```
+Args:
+    target_ext (str):
+    target_slugify (bool): (default: False)
+```
 
 ### get_temp
 
@@ -199,7 +215,7 @@ Generate more or less unique color for a given string
 
 ### tc2s
 
-Converts SMPTE timecode (HH:MM:SS:FF) to number of seconds
+Converts an SMPTE timecode (HH:MM:SS:FF) to number of seconds
 
 
 ```

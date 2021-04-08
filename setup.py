@@ -6,7 +6,7 @@ def read(fname):
 
 setup(
     name = "nxtools",
-    version = "1.0.0",
+    version = "1.5.0",
     author = "Martin Wacker",
     author_email = "martas@imm.cz",
     description = "A set of utilities and helpers for media processing and content management",
@@ -14,7 +14,8 @@ setup(
     keywords = "utilities log logging ffmpeg watchfolder media mam time",
     url = "https://github.com/immstudios/nxtools",
     packages=['nxtools', 'nxtools.media', 'nxtools.caspar'],
-    long_description=read('README.rst'),
+    long_description=read('README.md'),
+    long_description_content_type='text/markdown',
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Console",

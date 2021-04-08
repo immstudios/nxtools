@@ -7,7 +7,6 @@ __all__ = [
         "get_base_name",
         "file_to_title",
         "get_file_siblings",
-        "WatchFolder"
     ]
 
 import os
@@ -16,8 +15,8 @@ import stat
 import uuid
 import time
 
-from .common import PYTHON_VERSION, get_guid
-from .logging import *
+from .common import get_guid
+from .logging import logging, log_traceback
 from .text import slugify
 
 
@@ -133,32 +132,38 @@ def join_path(*args):
     return os.path.join(*elms)
 
 
-def get_files(base_path, **kwargs):
-    if PYTHON_VERSION >= 3.5:
-        list_func = os.scandir
-    else:
-        list_func = os.listdir
+def get_files(
+        base_path:str,
+        recursive:bool=False,
+        hidden:bool=False,
+        exts:list=[],
+        case_sensitive_exts:bool=False,
+        relative_path:bool=False,
+        strip_path:str=None,
+    ):
+    """Crawls a given directory (base_path) and yields a FileObject object for each file found.
 
-    recursive = kwargs.get("recursive", False)
-    hidden = kwargs.get("hidden", False)
-    relative_path = kwargs.get("relative_path", False)
-    case_sensitive_exts = kwargs.get("case_sensitive_exts", False)
-    if case_sensitive_exts:
-        exts = kwargs.get("exts", [])
-    else:
-        exts = [ext.lower() for ext in kwargs.get("exts", [])]
-    strip_path = kwargs.get("strip_path", base_path)
+    Since scandir is used for crawling, file attributes (ctime, mtime, size...) are instantly available.
+
+    Args:
+        base_path (str): Path to the directory to be crawled
+        recursive (bool): Crawl recursively (default: False)
+        hidden (bool): Yield hidden (dot)files too (default: False)
+        exts (list): If specified, yields only files matching given extensions
+        case_sensitive_exts (bool): Do not ignore cases when `exts` list is used (default: False)
+    """
+
+    if not case_sensitive_exts:
+        exts = [ext.lower() for ext in exts]
+
+    if strip_path is None:
+        strip_path = base_path
+
     if os.path.exists(base_path):
-        for dir_entry in list_func(base_path):
-
-            if PYTHON_VERSION >= 3:
-                file_name = dir_entry.name
-                file_path = dir_entry.path
-                stat_result = dir_entry.stat()
-            else:
-                file_name = dir_entry
-                file_path = join_path(base_path, dir_entry)
-                stat_result = os.stat(file_path)
+        for dir_entry in os.scandir(base_path):
+            file_name = dir_entry.name
+            file_path = dir_entry.path
+            stat_result = dir_entry.stat()
 
             file_object = FileObject(
                     file_path,
@@ -200,6 +205,18 @@ def get_files(base_path, **kwargs):
 
 
 def get_path_pairs(input_dir, output_dir, **kwargs):
+    """Crawls input_dir using get_files and yields tuples of input and output files.
+
+    This function is useful for batch conversion, when you need to process files
+    from `input_dir` and output the result to a `output_dir`.
+
+    Most arguments are the same as for `get_files`. You can also specify a target extension,
+    use a slugifier for the output path.
+
+    Args:
+        target_ext (str):
+        target_slugify (bool): (default: False)
+    """
     kwargs["relative_path"] = True
     kwargs["recursive"] = True
     target_ext = kwargs.get("target_ext", False)
@@ -226,6 +243,12 @@ def get_path_pairs(input_dir, output_dir, **kwargs):
 
 
 def get_temp(extension=False, root=False):
+    """Returns a path to a temporary file
+
+    Args:
+        extension (str)
+        root (str)
+    """
     if not root:
         root = tempfile.gettempdir()
     filename = join_path(root, get_guid())
@@ -235,7 +258,17 @@ def get_temp(extension=False, root=False):
 
 
 def get_base_name(fname):
-    return os.path.splitext(os.path.basename(fname))[0]
+    """Strips a directory and and extension from a given path.
+
+    `/etc/foo/bar.baz` becomes `bar`
+
+    Args:
+        fname (str): path-like object, string or FileObject
+
+    Returns:
+        str
+    """
+    return os.path.splitext(os.path.basename(str(fname)))[0]
 
 
 def file_to_title(fname):
@@ -244,7 +277,8 @@ def file_to_title(fname):
     elms = []
     capd = False
     for i, elm in enumerate(base.split(" ")):
-        if not elm: continue
+        if not elm:
+            continue
         if not capd and not (elm.isdigit() or elm.upper()==elm):
             elm = elm.capitalize()
             capd = True
@@ -265,95 +299,8 @@ def get_file_size(path):
     try:
         f = open(str(path), "rb")
     except Exception:
-        log_traceback("Exception! File {} is not accessible".format(path))
+        log_traceback(f"Exception! File {path} is not accessible")
         return 0
     f.seek(0, 2)
     return f.tell()
 
-
-class WatchFolder():
-    def __init__(self, input_dir, **kwargs):
-        self.input_dir = input_dir
-        self.settings = self.defaults
-        self.settings.update(**kwargs)
-        self.file_sizes = {}
-        if "valid_exts" in kwargs:
-            logging.warning("Watchfolder: valid_exts is deprecated. Use exts instead")
-            self.settings["exts"] = kwargs["valid_exts"]
-        self.ignore_files = set()
-
-    def __getitem__(self, key):
-        return self.settings[key]
-
-    @property
-    def defaults(self):
-        settings = {
-            "iter_delay" : 20,
-            "hidden" : False,
-            "relative_path" : False,
-            "case_sensitive_exts" : False,
-            "use_file_sizes": True,
-            "recursive" : True,
-            "silent" : False,
-            "exts" : []
-            }
-        return settings
-
-    def start(self):
-        while True:
-            try:
-                self.watch()
-                self.clean_up()
-                time.sleep(self.settings["iter_delay"])
-            except KeyboardInterrupt:
-                print ()
-                logging.warning("User interrupt")
-                break
-
-    def clean_up(self):
-        keys = [key for key in self.file_sizes.keys()]
-        for file_path in keys:
-            if not os.path.exists(file_path):
-                del(self.file_sizes[file_path])
-        keys = list(self.ignore_files)
-        for key in keys:
-            if not os.path.exists(key):
-                self.ignore_files.remove(key)
-
-
-    def watch(self):
-        for input_path in get_files(
-                    self.input_dir,
-                    recursive=self.settings["recursive"],
-                    hidden=self.settings["hidden"],
-                    exts=self.settings["exts"],
-                    relative_path=self.settings["relative_path"],
-                    case_sensitive_exts=self.settings["case_sensitive_exts"]
-                ):
-
-            if self["relative_path"]:
-                full_path = os.path.abspath(join_path(self.input_dir, input_path.path))
-            else:
-                full_path = os.path.abspath(input_path.path)
-
-            if full_path in self.ignore_files:
-                continue
-
-            if not self["use_file_sizes"]:
-                self.process(input_path)
-                continue
-
-            self.process_file_size = get_file_size(full_path)
-            if self.process_file_size == 0:
-                continue
-
-            if not (full_path in self.file_sizes.keys() and self.file_sizes[full_path] == self.process_file_size):
-                self.file_sizes[full_path] = self.process_file_size
-                if not self.settings["silent"]:
-                    logging.debug("Watching file {} ({} bytes)".format(input_path, input_path.size))
-                continue
-            if self.process(input_path):
-                self.ignore_files.add(full_path)
-
-    def process(self, input_path):
-        pass

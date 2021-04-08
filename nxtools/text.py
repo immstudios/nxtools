@@ -1,5 +1,4 @@
 __all__ = [
-        "to_unicode",
         "indent",
         "unaccent",
         "slugify",
@@ -20,8 +19,6 @@ try:
     has_unidecode = True
 except ImportError:
     has_unidecode = False
-    if PYTHON_VERSION < 3:
-        import unicodedata
 
 
 #: E-mail address regular expression
@@ -30,71 +27,50 @@ EMAIL_REGEXP = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
 #: GUID/UUID regular expression
 GUID_REGEXP = r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
 
-
-if PYTHON_VERSION < 3:
-    default_slug_whitelist = string.letters + string.digits
-else:
-    default_slug_whitelist = string.ascii_letters + string.digits
+default_slug_whitelist = string.ascii_letters + string.digits
 slug_separator_whitelist = " ,./\\;:!|*^#@~+-_="
 
 
-def indent(src, l=4):
-    """
-    Indent given text
+def indent(src, l:int=4):
+    """Indent a multi-line text
     """
     return "\n".join(["{}{}".format(l*" ", s.rstrip()) for s in src.split("\n")]) + "\n" if src.endswith("\n") else ""
 
-def to_unicode(string, encoding="utf-8"):
-    if PYTHON_VERSION < 3:
-        if type(string) == str:
-            string = unicode(string, encoding)
-    return string
 
-def unaccent(string, encoding="utf-8"):
-    """not just unaccent, but full to-ascii transliteration"""
-    string = to_unicode(string)
+def unaccent(string:str) -> str:
+    """Remove accents and/or transliterate non-ascii characters"""
     if has_unidecode:
         return unidecode.unidecode(string)
-    if PYTHON_VERSION < 3:
-        if type(string) == str:
-            string = unicode(string, encoding)
-        nfkd_form = unicodedata.normalize('NFKD', string)
-        return u"".join([c for c in nfkd_form if not unicodedata.combining(c)]).encode("ascii", "ignore")
-    else:
-        return string #TODO
+    return string
 
-def slugify(input_string, **kwargs):
-    """
-    Slugify a text string
+def slugify(
+        input_string:str,
+        separator:str="-",
+        lower:bool=True,
+        make_set:bool=False,
+        min_lenght:int=1,
+        slug_whitelist:str=default_slug_whitelist,
+        split_chars:str=slug_separator_whitelist,
+    ) -> str:
+    """Slugify a text string
 
     This function removes transliterates input string to ASCII, removes special characters
     and use join resulting elemets using specified separator.
 
+    "Žluťoučký Путин is 下衆野郎" becomes "zlutoucky-putin-is-xia-zhong-ye-lang"
 
-    Parameters
-    ----------
-    input_string : str
-
-    separator : string
-        Default "-"
-    lower : bool
-        convert the result to lowercase (default True)
-    make_set: bool
-        return "set" object instead of string
-    min_length: int
-        minimal length of an element (word)
-    slug_whitelist: str
-        characters allowed in the output (default ascii letters, digits and the separator)
-    split_chars:
-        set of characters used for word splitting (there is a sane default)
+    Args:
+        input_string (str):
+        separator (str): string (default: "-")
+        lower (bool): Convert to lower-case (default: True)
+        make_set (bool): return "set" object instead of string
+        min_lenght (int): minimal length of an element (word)
+        slug_whitelist (str): characters allowed in the output
+                (default ascii letters, digits and the separator)
+        split_chars (str): set of characters used for word
+                splitting (there is a sane default)
 
     """
-    separator = kwargs.get("separator", "-")
-    lower = kwargs.get("lower", True)
-    make_set = kwargs.get("make_set", False)
-    min_lenght = int(kwargs.get("min_lenght", 1))
-    slug_whitelist = kwargs.get("slug_whitelist", default_slug_whitelist)
-    split_chars = kwargs.get("split_chars", slug_separator_whitelist)
     input_string = unaccent(input_string)
     if lower:
         input_string = input_string.lower()
@@ -103,9 +79,8 @@ def slugify(input_string, **kwargs):
     elements = [elm.strip() for elm in input_string.split(" ") if len(elm.strip()) >= min_lenght]
     return set(elements) if make_set else separator.join(elements)
 
-def string2color(string):
-    """
-    Generate more or less unique color for a given string
+def string2color(string:str) -> str:
+    """Generate more or less unique color for a given string
     """
     h = 0
     for char in string:
@@ -122,8 +97,7 @@ def fract2float(fract):
         return 1
 
 def format_filesize(value):
-    """
-    Returns a human readable filesize for given byte count
+    """Returns a human readable filesize for a given byte count
     """
     if not value:
         return ""

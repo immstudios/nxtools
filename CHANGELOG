@@ -1,3 +1,9 @@
+1.5
+ - Documentation, dropped support for Python version <3.6
+
+1.2
+ - Refactoring and bugfixes
+
 1.0
  - repository clean-up
  - gmt option in format_time

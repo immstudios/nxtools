@@ -1,27 +1,4 @@
-# The MIT License (MIT)
-#
-# Copyright (c) 2015 - 2017 imm studios, z.s.
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-
-from __future__ import print_function
+__all__ = ["FFMPEG", "ffmpeg", "enable_ffmpeg_debug"]
 
 import os
 import re
@@ -31,10 +8,8 @@ import copy
 import signal
 
 from nxtools.logging import *
-from nxtools.common import decode_if_py3, PYTHON_VERSION
 from nxtools.text import indent
 
-__all__ = ["enable_ffmpeg_debug", "FFMPEG", "ffmpeg"]
 
 FFMPEG_DEBUG = False
 
@@ -58,46 +33,11 @@ class FFMPEG():
 
         self.proc = None
         self.cmd = ["ffmpeg", "-hide_banner"]
-
-        if len(args) == 2 and "output_format" in kwargs:
-            input_path, output_path = [str(arg) for arg in args]
-            input_format = kwargs.get("input_format", [])
-            output_format = kwargs.get("output_format", [])
-
-            self.cmd.append("-y")
-            for p in input_format:
-                self.cmd.extend(self.make_profile(p))
-            self.cmd.extend(["-i", input_path])
-            for p in output_format:
-                self.cmd.extend(self.make_profile(p))
-            self.cmd.append(output_path)
-            self.reset_stderr()
-        else:
-            self.cmd.extend(str(arg) for arg in args)
+        self.cmd.extend(str(arg) for arg in args)
 
     def reset_stderr(self):
-        if PYTHON_VERSION < 3:
-            self.buff = ""
-        else:
-            self.buff = b""
+        self.buff = b""
         self.error_log = ""
-
-
-    @staticmethod
-    def make_profile(p):
-        cmd = []
-        if type(p) == list and len(p) == 2:
-            key, val = p
-        elif type(p) == list:
-            key = p[0]
-            val = False
-        else:
-            key = p
-            val = False
-        cmd.append("-" + str(key))
-        if val:
-            cmd.append(str(val))
-        return cmd
 
     @property
     def is_running(self):
@@ -145,7 +85,7 @@ class FFMPEG():
             self.stop()
             interrupted = True
         self.proc.wait()
-        self.error_log += decode_if_py3(self.stderr.read())
+        self.error_log += self.stderr.read().decode("utf-8")
         if interrupted:
             raise KeyboardInterrupt
 
@@ -154,23 +94,20 @@ class FFMPEG():
         ch = self.proc.stderr.read(1)
         if not ch:
             return False
-        if ch in ["\n", "\r", b"\n", b"\r"]:
+        if ch in [b"\n", b"\r"]:
             if progress_handler:
-                position_match = re_position.search(decode_if_py3(self.buff))
+                position_match = re_position.search(self.buff.decode("utf-8"))
                 if position_match:
                     position = time2sec(position_match)
                     progress_handler(position)
             else:
                 try:
-                    self.error_log += decode_if_py3(self.buff) + "\n"
-                except:
+                    self.error_log += self.buff.decode("utf-8") + "\n"
+                except Exception:
                     pass
             if FFMPEG_DEBUG:
                 print (self.buff.rstrip())
-            if PYTHON_VERSION < 3:
-                self.buff = ""
-            else:
-                self.buff = b""
+            self.buff = b""
         else:
             self.buff += ch
         return True
