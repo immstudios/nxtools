@@ -1,5 +1,6 @@
 __all__ = [
         "indent",
+        "to_unicode",
         "unaccent",
         "slugify",
         "string2color",
@@ -36,6 +37,9 @@ def indent(src, l:int=4):
     """
     return "\n".join(["{}{}".format(l*" ", s.rstrip()) for s in src.split("\n")]) + "\n" if src.endswith("\n") else ""
 
+def to_unicode(string:str) -> str:
+    #DEPRECATED
+    return string
 
 def unaccent(string:str) -> str:
     """Remove accents and/or transliterate non-ascii characters"""

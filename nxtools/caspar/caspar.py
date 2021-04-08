@@ -7,7 +7,7 @@ __all__ = [
     "CasparResponse"
 ]
 
-DELIM = r"\r\n"
+DELIM = b"\r\n"
 
 class CasparResponse(object):
     """Caspar query response object"""
