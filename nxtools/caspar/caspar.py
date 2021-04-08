@@ -1,3 +1,4 @@
+import socket
 import telnetlib
 
 from nxtools import logging, log_traceback
@@ -40,7 +41,7 @@ class CasparResponse(object):
 
 class CasparCG(object):
     """CasparCG client object"""
-    def __init__(self, host:str="localhost", port:int=5250, timeout:float=5):
+    def __init__(self, host:str="localhost", port:int=5250, timeout:float=2):
         assert isinstance(port, int) and port <= 65535, "Invalid port number"
         self.host = host
         self.port = port
@@ -53,6 +54,9 @@ class CasparCG(object):
             self.connection = telnetlib.Telnet(self.host, self.port, timeout=self.timeout)
         except ConnectionRefusedError:
             logging.error(f"Unable to connect CasparCG server at {self.host}:{self.port}. Connection refused")
+            return False
+        except socket.timeout:
+            logging.error(f"Unable to connect CasparCG server at {self.host}:{self.port}. Timeout.")
             return False
         except Exception:
             log_traceback()
@@ -75,6 +79,9 @@ class CasparCG(object):
         try:
             self.connection.write(query)
             result = self.connection.read_until(DELIM).strip()
+        except ConnectionResetError:
+            self.connection = None
+            return CasparResponse(500, "Connection reset by peer")
         except Exception:
             log_traceback()
             return CasparResponse(500, "Query failed")
