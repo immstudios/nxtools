@@ -78,11 +78,11 @@ def s2time(secs:float, show_secs:bool=True, show_fracs:bool=True):
     hd = int(hh % 24)
     mm = int((wholesecs / 60) - (hh*60))
     ss = int(wholesecs - (hh*3600) - (mm*60))
-    r = "{hd:02d}:{mm:02d}"
+    r = f"{hd:02d}:{mm:02d}"
     if show_secs:
-        r += ":{ss:02d}"
+        r += f":{ss:02d}"
         if show_fracs:
-            r += ".{centisecs:02d}"
+            r += f".{centisecs:02d}"
     return r
 
 def f2tc(f, base=25):
