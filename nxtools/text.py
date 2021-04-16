@@ -52,7 +52,7 @@ def slugify(
         separator:str="-",
         lower:bool=True,
         make_set:bool=False,
-        min_lenght:int=1,
+        min_length:int=1,
         slug_whitelist:str=default_slug_whitelist,
         split_chars:str=slug_separator_whitelist,
     ) -> str:
@@ -68,7 +68,7 @@ def slugify(
         separator (str): string (default: "-")
         lower (bool): Convert to lower-case (default: True)
         make_set (bool): return "set" object instead of string
-        min_lenght (int): minimal length of an element (word)
+        min_length (int): minimal length of an element (word)
         slug_whitelist (str): characters allowed in the output
                 (default ascii letters, digits and the separator)
         split_chars (str): set of characters used for word
@@ -80,7 +80,7 @@ def slugify(
         input_string = input_string.lower()
     input_string = "".join([ch if ch not in split_chars else " " for ch in input_string])
     input_string = "".join([ch if ch in slug_whitelist + " " else "" for ch in input_string])
-    elements = [elm.strip() for elm in input_string.split(" ") if len(elm.strip()) >= min_lenght]
+    elements = [elm.strip() for elm in input_string.split(" ") if len(elm.strip()) >= min_length]
     return set(elements) if make_set else separator.join(elements)
 
 def string2color(string:str) -> str:
