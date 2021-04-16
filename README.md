@@ -6,12 +6,18 @@ nxtools is a set of various tools and helpers used by [Nebula](https://github.co
 Installation
 ------------
 
-``pip install nxtools``
+`pip install nxtools`
+
+### Optional dependencies
+
+ - `unidecode` for full unicode transliteration
+ - `colorama` for colored log output even on Windows
+
 
 Examples
 -------
 
- - [Podcasts downloader](https://pastebin.com/5Fya2kep>)
+ - [Podcasts downloader](https://pastebin.com/5Fya2kep)
 
 Reference
 ---------
@@ -202,7 +208,7 @@ Args:
     separator (str): string (default: "-")
     lower (bool): Convert to lower-case (default: True)
     make_set (bool): return "set" object instead of string
-    min_lenght (int): minimal length of an element (word)
+    min_length (int): minimal length of an element (word)
     slug_whitelist (str): characters allowed in the output
             (default ascii letters, digits and the separator)
     split_chars (str): set of characters used for word
