@@ -204,7 +204,18 @@ def get_files(
                     yield file_object
 
 
-def get_path_pairs(input_dir, output_dir, **kwargs):
+def get_path_pairs(
+        input_dir,
+        output_dir,
+        target_ext:str=None,
+        target_slugify:bool=False,
+        recursive:bool=True,
+        hidden:bool=False,
+        exts:list=[],
+        case_sensitive_exts:bool=False,
+        relative_path:bool=False,
+        strip_path:str=None,
+    ):
     """Crawls input_dir using get_files and yields tuples of input and output files.
 
     This function is useful for batch conversion, when you need to process files
@@ -217,13 +228,17 @@ def get_path_pairs(input_dir, output_dir, **kwargs):
         target_ext (str):
         target_slugify (bool): (default: False)
     """
-    kwargs["relative_path"] = True
-    kwargs["recursive"] = True
-    target_ext = kwargs.get("target_ext", False)
 
-    for input_file in get_files(input_dir, **kwargs):
+    for input_file in get_files(
+            input_dir,
+            relative_path=True,
+            recursive=recursive,
+            hidden=hidden,
+            exts=exts,
+            case_sensitive_exts=case_sensitive_exts
+        ):
         input_path = input_file.path.replace("\\", "/")
-        if kwargs.get("target_slugify", False):
+        if target_slugify:
             output_path = join_path(
                     output_dir,
                     *[slugify(f) for f in input_file.dir_name.split("/")] +
