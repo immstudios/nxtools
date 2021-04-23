@@ -78,9 +78,8 @@ class FFMPEG():
     def wait(self, progress_handler=None):
         interrupted = False
         try:
-            while True:
-                if not self.process(progress_handler=progress_handler):
-                    break
+            while self.process(progress_handler=progress_handler):
+                pass
         except KeyboardInterrupt:
             self.stop()
             interrupted = True
@@ -95,18 +94,24 @@ class FFMPEG():
         if not ch:
             return False
         if ch in [b"\n", b"\r"]:
-            if progress_handler:
-                position_match = re_position.search(self.buff.decode("utf-8"))
-                if position_match:
-                    position = time2sec(position_match)
+            line = self.buff.decode("utf-8").strip()
+
+            position_match = re_position.search(line)
+            if position_match:
+                position = time2sec(position_match)
+                if progress_handler:
                     progress_handler(position)
+                self.error_log = ""
+
+            elif line == "Press [q] to stop, [?] for help":
+                self.error_log = ""
+
             else:
-                try:
-                    self.error_log += self.buff.decode("utf-8") + "\n"
-                except Exception:
-                    pass
+                self.error_log += line + "\n"
+
             if FFMPEG_DEBUG:
-                print (self.buff.rstrip())
+                print (line)
+
             self.buff = b""
         else:
             self.buff += ch
