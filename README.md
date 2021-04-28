@@ -200,8 +200,6 @@ Slugify a text string
 This function removes transliterates input string to ASCII, removes special characters
 and use join resulting elemets using specified separator.
 
-"Žluťoučký Путин is 下衆野郎" becomes "zlutoucky-putin-is-xia-zhong-ye-lang"
-
 ```
 Args:
     input_string (str):

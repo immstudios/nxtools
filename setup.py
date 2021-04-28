@@ -6,7 +6,7 @@ def read(fname):
 
 setup(
     name = "nxtools",
-    version = "1.5.1",
+    version = "1.5.2",
     author = "Martin Wacker",
     author_email = "martas@imm.cz",
     description = "A set of utilities and helpers for media processing and content management",
