@@ -88,7 +88,7 @@ class Logging():
 
         if has_colorama:
             self.formats_colorama = {
-                DEBUG     : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.BRIGHT + Fore.BLUE   + "{type}"  +              "{user} {message}" + Style.RESET_ALL,
+                DEBUG     : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.RESET_ALL + Fore.BLUE + "{type}" + "{user} {message}" + Style.RESET_ALL,
                 INFO      : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.WHITE  + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
                 WARNING   : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.YELLOW + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
                 ERROR     : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.RED    + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
