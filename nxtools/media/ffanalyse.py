@@ -5,6 +5,7 @@ import re
 import signal
 import subprocess
 
+from nxtools.common import PLATFORM
 from nxtools.logging import *
 from nxtools.version import PYTHON_VERSION
 from nxtools.media.ffmpeg import FFMPEG_DEBUG
@@ -78,7 +79,10 @@ class FFAnalyse():
     def stop(self):
         if not self.proc:
             return False
-        self.proc.send_signal(signal.SIGINT)
+        if PLATFORM == "windows":
+            self.proc.send_signel(signal.CTRL_C_EVENT)
+        else:
+            self.proc.send_signal(signal.SIGINT)
         self.proc.wait()
         return True
 

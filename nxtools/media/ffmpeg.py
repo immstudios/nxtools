@@ -7,6 +7,7 @@ import subprocess
 import copy
 import signal
 
+from nxtools.common import PLATFORM
 from nxtools.logging import *
 from nxtools.text import indent
 
@@ -72,7 +73,10 @@ class FFMPEG():
     def stop(self):
         if not self.proc:
             return False
-        self.proc.send_signal(signal.SIGINT)
+        if PLATFORM == "windows":
+            self.proc.send_signel(signal.CTRL_C_EVENT)
+        else:
+            self.proc.send_signal(signal.SIGINT)
         return True
 
     def wait(self, progress_handler=None):
