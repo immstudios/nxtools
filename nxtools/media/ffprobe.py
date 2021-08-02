@@ -9,7 +9,7 @@ from nxtools.logging import *
 from nxtools.files import FileObject
 
 
-def ffprobe(input_file, verbose=False):
+def ffprobe(input_file:str, verbose:bool=False) -> dict:
     """Runs ffprobe on file and returns python dict with result"""
     if isinstance(input_file, FileObject):
         exists = input_file.exists
