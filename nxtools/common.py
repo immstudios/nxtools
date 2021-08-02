@@ -1,19 +1,19 @@
 __all__ = [
-        "decode_if_py3",
-        "encode_if_py3",
-        "PLATFORM",
-        "find_binary",
-        "get_guid",
-        "xml",
-        "string_type",
-        "string_types"
-    ]
+    "decode_if_py3",
+    "encode_if_py3",
+    "PLATFORM",
+    "find_binary",
+    "get_guid",
+    "xml",
+    "string_type",
+    "string_types"
+]
 
 import os
 import sys
 import uuid
 
-from xml.etree import ElementTree as ET
+from xml.etree import ElementTree
 
 # DEPRECATED
 decode_if_py3 = lambda x, enc="utf-8": x.decode(enc)
@@ -24,24 +24,23 @@ string_types = [str]
 PLATFORM = "windows" if sys.platform == "win32" else "unix"
 
 def xml(data):
-    """Parse an XML using ElementTree"""
-    return ET.XML(data)
+    """Parse an XML string using ElementTree"""
+    return ElementTree.XML(data)
 
-def get_guid():
-    """Returns a GUID :)"""
+def get_guid() -> str:
+    """Returns a GUID"""
     return str(uuid.uuid1())
 
-def find_binary(fname):
-    """Attempt to find a given executable and return its path
-    """
+def find_binary(file_name:str) -> str:
+    """Attempt to find a given executable and return its path"""
     if PLATFORM == "unix":
-        if os.path.exists(fname) and fname == os.path.basename(fname):
-            return "./" + fname
-        return fname
+        if os.path.exists(file_name) and file_name == os.path.basename(file_name):
+            return "./" + file_name
+        return file_name
     elif PLATFORM == "windows":
-        if not fname.endswith(".exe"):
-            fname = fname + ".exe"
+        if not file_name.endswith(".exe"):
+            file_name = file_name + ".exe"
         for path in sys.path:
-            fpath = os.path.join(path, fname)
+            fpath = os.path.join(path, file_name)
             if os.path.exists(fpath):
                 return fpath

@@ -1,10 +1,10 @@
 __all__ = [
-        "Logging",
-        "logging",
-        "log_traceback",
-        "critical_error",
-        "log_to_file"
-    ]
+    "Logging",
+    "logging",
+    "log_traceback",
+    "critical_error",
+    "log_to_file"
+]
 
 import os
 import sys
@@ -38,7 +38,7 @@ def log_to_file(log_path):
             "date" : format_time(time.time(), "%Y-%m-%d")
         }
         path = path.format(**placeholders)
-        dirname, fname = os.path.split(path)
+        dirname, _ = os.path.split(path)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 
@@ -51,7 +51,7 @@ def log_to_file(log_path):
                    3 : "ERROR    ",
                    4 : "GOOD NEWS"
                 }[kwargs["message_type"]]
-            f.write("{}  {}  {}\n".format(tstamp, ltype, kwargs["message"]))
+            f.write(f"{tstamp}  {ltype}  {kwargs['message']}\n")
 
     return functools.partial(log_to_file_handler, log_path)
 
@@ -110,7 +110,7 @@ class Logging():
                 handler(user=self.user, message_type=msgtype, message=message)
 
         ldata = {
-            "user" : " {:<15}".format(user) if user else "",
+            "user" : f" {user:<15}" if user else "",
             "message" : message,
             "timestamp" :format_time(time.time()) + " " if self.show_time else "",
             "type" : {
@@ -159,17 +159,15 @@ logging = Logging()
 
 
 def log_traceback(message="Exception!", **kwargs):
-    """Log the current exception traceback
-    """
+    """Log the current exception traceback"""
     tb = traceback.format_exc()
-    msg = "{}\n\n{}".format(message, indent(tb))
+    msg = f"{message}\n\n{indent(tb)}"
     logging.error(msg, **kwargs)
     return msg
 
 
-def critical_error(msg, return_code=1, **kwargs):
-    """Log an error message and exit program.
-    """
-    logging.error(msg, **kwargs)
+def critical_error(message, return_code=1, **kwargs):
+    """Log an error message and exit program."""
+    logging.error(message, **kwargs)
     logging.debug("Critical error. Terminating program.")
     sys.exit(return_code)

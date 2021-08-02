@@ -1,6 +1,8 @@
-from __future__ import print_function
+__all__ = [
+    "FFAnalyse", 
+    "ffanalyse"
+]
 
-import os
 import re
 import signal
 import subprocess
@@ -9,8 +11,6 @@ from nxtools.common import PLATFORM
 from nxtools.logging import *
 from nxtools.version import PYTHON_VERSION
 from nxtools.media.ffmpeg import FFMPEG_DEBUG
-
-__all__ = ["FFAnalyse", "ffanalyse"]
 
 
 class FFAnalyse():

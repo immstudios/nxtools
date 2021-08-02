@@ -1,24 +1,23 @@
 __all__ = [
-        "indent",
-        "to_unicode",
-        "unaccent",
-        "slugify",
-        "string2color",
-        "fract2float",
-        "format_filesize",
-        "EMAIL_REGEXP",
-        "GUID_REGEXP"
-    ]
+    "indent",
+    "to_unicode",
+    "unaccent",
+    "slugify",
+    "string2color",
+    "fract2float",
+    "format_filesize",
+    "EMAIL_REGEXP",
+    "GUID_REGEXP"
+]
 
 
 import string
-
 from .common import *
 
 try:
     import unidecode
     has_unidecode = True
-except ImportError:
+except ModuleNotFoundError:
     has_unidecode = False
 
 
@@ -82,14 +81,13 @@ def slugify(
     return set(elements) if make_set else separator.join(elements)
 
 def string2color(string:str) -> str:
-    """Generate more or less unique color for a given string
-    """
+    """Generate more or less unique color for a given string"""
     h = 0
     for char in string:
         h = ord(char) + ((h << 5) - h)
     return hex(h & 0x00FFFFFF)
 
-def fract2float(fract):
+def fract2float(fract) -> float:
     nd = fract.split("/")
     try:
         if len(nd) == 1 or nd[1] == "1":
@@ -99,8 +97,7 @@ def fract2float(fract):
         return 1
 
 def format_filesize(value):
-    """Returns a human readable filesize for a given byte count
-    """
+    """Returns a human readable filesize for a given byte count"""
     if not value:
         return ""
     for x in ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB']:

@@ -1,4 +1,8 @@
-__all__ = ["FFMPEG", "ffmpeg", "enable_ffmpeg_debug"]
+__all__ = [
+    "FFMPEG", 
+    "ffmpeg", 
+    "enable_ffmpeg_debug"
+]
 
 import os
 import re

@@ -1,12 +1,13 @@
-import socket
-import telnetlib
-
-from nxtools import logging, log_traceback
-
 __all__ = [
     "CasparCG",
     "CasparResponse"
 ]
+
+import socket
+import telnetlib
+
+from .. import logging, log_traceback
+
 
 DELIM = b"\r\n"
 
@@ -17,16 +18,16 @@ class CasparResponse(object):
         self.data = data
 
     @property
-    def response(self):
+    def response(self) -> int:
         return self.code
 
     @property
-    def is_error(self):
+    def is_error(self) -> bool:
         """Returns True if query failed"""
         return self.code >= 400
 
     @property
-    def is_success(self):
+    def is_success(self) -> bool:
         """Returns True if query succeeded"""
         return self.code < 400
 
@@ -48,7 +49,7 @@ class CasparCG(object):
         self.timeout = timeout
         self.connection = False
 
-    def connect(self, **kwargs):
+    def connect(self, **kwargs) -> bool:
         """Create connection to CasparCG Server"""
         try:
             self.connection = telnetlib.Telnet(self.host, self.port, timeout=self.timeout)
@@ -63,7 +64,7 @@ class CasparCG(object):
             return False
         return True
 
-    def query(self, query:str, **kwargs):
+    def query(self, query:str, **kwargs) -> CasparResponse:
         """Send AMCP command"""
         if not self.connection:
             if not self.connect(**kwargs):
@@ -92,15 +93,15 @@ class CasparCG(object):
             return CasparResponse(500, "No result")
 
         try:
-            if result[0:3] == "202":
+            if result[:3] == "202":
                 return CasparResponse(202, "No result")
 
-            elif result[0:3] in ["201", "200"]:
+            elif result[:3] in ["201", "200"]:
                 stat = int(result[0:3])
                 result = self.connection.read_until(DELIM).decode("utf-8").strip()
                 return CasparResponse(stat, result)
 
-            elif int(result[0:1]) > 3:
+            elif result[0] in ["3", "4", "5"]:
                 stat = int(result[0:3])
                 return CasparResponse(stat, result)
 

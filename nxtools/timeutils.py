@@ -1,12 +1,12 @@
 __all__ = [
-        "datestr2ts",
-        "tc2s",
-        "s2time",
-        "f2tc",
-        "s2tc",
-        "s2words",
-        "format_time"
-    ]
+    "datestr2ts",
+    "tc2s",
+    "s2time",
+    "f2tc",
+    "s2tc",
+    "s2words",
+    "format_time"
+]
 
 import time
 import datetime

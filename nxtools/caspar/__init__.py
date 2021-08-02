@@ -1,1 +1,1 @@
-from .caspar import CasparCG
+from .caspar import CasparCG, CasparResponse

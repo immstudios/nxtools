@@ -1,22 +1,20 @@
 __all__ = [
-        "FileObject",
-        "join_path",
-        "get_files",
-        "get_path_pairs",
-        "get_temp",
-        "get_base_name",
-        "file_to_title",
-        "get_file_siblings",
-    ]
+    "FileObject",
+    "join_path",
+    "get_files",
+    "get_path_pairs",
+    "get_temp",
+    "get_base_name",
+    "file_to_title",
+    "get_file_siblings",
+]
 
 import os
 import tempfile
 import stat
-import uuid
-import time
 
 from .common import get_guid
-from .logging import logging, log_traceback
+from .logging import log_traceback
 from .text import slugify
 
 
@@ -40,15 +38,15 @@ class FileObject(object):
     def load_stat(self):
         stat_result = os.stat(self.path)
         self.attrs.update({
-                "mode" : stat_result[stat.ST_MODE],
-                "ino" : stat_result[stat.ST_INO],
-                "uid" : stat_result[stat.ST_UID],
-                "gid" : stat_result[stat.ST_GID],
-                "size" : stat_result[stat.ST_SIZE],
-                "atime" : stat_result[stat.ST_ATIME],
-                "mtime" : stat_result[stat.ST_MTIME],
-                "ctime" : stat_result[stat.ST_CTIME]
-            })
+            "mode" : stat_result[stat.ST_MODE],
+            "ino" : stat_result[stat.ST_INO],
+            "uid" : stat_result[stat.ST_UID],
+            "gid" : stat_result[stat.ST_GID],
+            "size" : stat_result[stat.ST_SIZE],
+            "atime" : stat_result[stat.ST_ATIME],
+            "mtime" : stat_result[stat.ST_MTIME],
+            "ctime" : stat_result[stat.ST_CTIME]
+        })
 
     @property
     def atime(self):
@@ -166,16 +164,16 @@ def get_files(
             stat_result = dir_entry.stat()
 
             file_object = FileObject(
-                    file_path,
-                    mode=stat_result[stat.ST_MODE],
-                    ino=stat_result[stat.ST_INO],
-                    uid=stat_result[stat.ST_UID],
-                    gid=stat_result[stat.ST_GID],
-                    size=stat_result[stat.ST_SIZE],
-                    atime=stat_result[stat.ST_ATIME],
-                    mtime=stat_result[stat.ST_MTIME],
-                    ctime=stat_result[stat.ST_CTIME]
-                )
+                file_path,
+                mode=stat_result[stat.ST_MODE],
+                ino=stat_result[stat.ST_INO],
+                uid=stat_result[stat.ST_UID],
+                gid=stat_result[stat.ST_GID],
+                size=stat_result[stat.ST_SIZE],
+                atime=stat_result[stat.ST_ATIME],
+                mtime=stat_result[stat.ST_MTIME],
+                ctime=stat_result[stat.ST_CTIME]
+            )
 
             if not hidden and file_name.startswith("."):
                 continue
@@ -213,8 +211,6 @@ def get_path_pairs(
         hidden:bool=False,
         exts:list=[],
         case_sensitive_exts:bool=False,
-        relative_path:bool=False,
-        strip_path:str=None,
     ):
     """Crawls input_dir using get_files and yields tuples of input and output files.
 
@@ -257,7 +253,7 @@ def get_path_pairs(
         yield input_file, output_file
 
 
-def get_temp(extension=False, root=False):
+def get_temp(extension:str=False, root:str=False) -> str:
     """Returns a path to a temporary file
 
     Args:
@@ -272,22 +268,25 @@ def get_temp(extension=False, root=False):
     return filename
 
 
-def get_base_name(fname):
+def get_base_name(file_name:str) -> str:
     """Strips a directory and and extension from a given path.
 
     `/etc/foo/bar.baz` becomes `bar`
 
     Args:
-        fname (str): path-like object, string or FileObject
+        file_name (str): path-like object, string or FileObject
 
     Returns:
         str
     """
-    return os.path.splitext(os.path.basename(str(fname)))[0]
+    return os.path.splitext(os.path.basename(str(file_name)))[0]
 
 
-def file_to_title(fname):
-    base = get_base_name(fname)
+def file_to_title(file_name:str) -> str:
+    """
+    Attempt to un-slugify a file name.
+    """
+    base = get_base_name(file_name)
     base = base.replace("_"," ").replace("-"," - ").strip()
     elms = []
     capd = False
@@ -310,7 +309,7 @@ def get_file_siblings(path, exts=[]):
             yield tstf
 
 
-def get_file_size(path):
+def get_file_size(path:str) -> int:
     try:
         f = open(str(path), "rb")
     except Exception:
@@ -318,4 +317,3 @@ def get_file_size(path):
         return 0
     f.seek(0, 2)
     return f.tell()
-
