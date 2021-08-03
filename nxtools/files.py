@@ -19,7 +19,16 @@ from .text import slugify
 
 
 class FileObject(object):
-    def __init__(self, *args, **kwargs):
+    """
+    An object representing a file on the filesystem.
+    The class provides a number of utility methods and properties
+    for easy access to file metadata.
+
+    """
+    def __init__(self, *args):
+        """
+        The constructor accepts a path or a list of path components.
+        """
         self.path = os.path.join(*args)
         self.attrs = {}
 
@@ -35,7 +44,7 @@ class FileObject(object):
     def __setitem__(self, key, value):
         self.attrs[key] = value
 
-    def load_stat(self):
+    def _load_stat(self):
         stat_result = os.stat(self.path)
         self.attrs.update({
             "mode" : stat_result[stat.ST_MODE],
@@ -50,73 +59,97 @@ class FileObject(object):
 
     @property
     def atime(self):
+        """
+        Return the last accessed time.
+        """
         if not "atime" in self.attrs:
-            self.load_stat()
+            self._load_stat()
         return self["atime"]
 
     @property
     def ctime(self):
+        """
+        Return the creation time.
+        """
         if not "ctime" in self.attrs:
-            self.load_stat()
+            self._load_stat()
         return self["ctime"]
 
     @property
     def mtime(self):
+        """
+        Return the last modified time.
+        """
         if not "mtime" in self.attrs:
-            self.load_stat()
+            self._load_stat()
         return self["mtime"]
 
     @property
     def size(self):
+        """
+        Return the size of the file.
+        """
         if not "size" in self.attrs:
-            self.load_stat()
+            self._load_stat()
         return self["size"]
 
     @property
     def is_dir(self):
+        """
+        Return `True` if the path is a directory.
+        """
         if not "mode" in self.attrs:
-            self.load_stat()
+            self._load_stat()
         return stat.S_ISDIR(self["mode"])
 
     @property
     def is_reg(self):
+        """ Return `True` if the path is a regular file.  """
         if not "mode" in self.attrs:
-            self.load_stat()
+            self._load_stat()
         return stat.S_ISREG(self["mode"])
 
     @property
     def is_file(self):
+        """ Return `True` if the path is a regular file.  """
         return os.path.isfile(self.path)
 
     @property
     def is_link(self):
+        """ Return `True` if the path is a symbolic link.  """
         if not "mode" in self.attrs:
-            self.load_stat()
+            self._load_stat()
         return stat.S_ISLNK(self["mode"])
 
     @property
     def is_fifo(self):
+        """ Return `True` if the path is a FIFO.  """
         if not "mode" in self.attrs:
-            self.load_stat()
+            self._load_stat()
         return stat.S_ISFIFO(self["mode"])
 
     @property
     def exists(self):
+        """ Return `True` if the path exists.  """
         return os.path.exists(self.path)
 
     @property
     def ext(self):
+        """ Return the file extension.  """
         return os.path.splitext(self.path)[1].lstrip(".")
 
     @property
     def dir_name(self):
+        """ Return the directory component of the path """
         return os.path.split(self.path)[0]
 
     @property
     def base_name(self):
+        """ Return the base name (without a directory and an extension) of the path.  """
         return os.path.splitext(os.path.basename(self.path))[0]
 
     def open(self, mode="r", **kwargs):
+        """ Return a file-like object opened with the specified mode.  """
         return open(self.path, mode, **kwargs)
 
 
@@ -139,16 +172,25 @@ def get_files(
         relative_path:bool=False,
         strip_path:str=None,
     ):
-    """Crawls a given directory (base_path) and yields a FileObject object for each file found.
-
-    Since scandir is used for crawling, file attributes (ctime, mtime, size...) are instantly available.
+    """ Crawl a given directory 
+    
+    For each file found in `base_path` yield a FileObject object.
 
     Args:
-        base_path (str): Path to the directory to be crawled
-        recursive (bool): Crawl recursively (default: False)
-        hidden (bool): Yield hidden (dot)files too (default: False)
-        exts (list): If specified, yields only files matching given extensions
-        case_sensitive_exts (bool): Do not ignore cases when `exts` list is used (default: False)
+        base_path (str): 
+            Path to the directory to be crawled
+
+        recursive (bool): 
+            Crawl recursively (default: False)
+
+        hidden (bool): 
+            Yield hidden (dot)files too (default: False)
+
+        exts (list): 
+            If specified, yields only files matching given extensions
+
+        case_sensitive_exts (bool): 
+            Do not ignore cases when `exts` list is used (default: False)
     """
 
     if not case_sensitive_exts:
@@ -212,13 +254,13 @@ def get_path_pairs(
         exts:list=[],
         case_sensitive_exts:bool=False,
     ):
-    """Crawls input_dir using get_files and yields tuples of input and output files.
+    """ For each file found in `input_dir` and yield a tuple of (input_path, output_path)
 
     This function is useful for batch conversion, when you need to process files
     from `input_dir` and output the result to a `output_dir`.
 
     Most arguments are the same as for `get_files`. You can also specify a target extension,
-    use a slugifier for the output path.
+    and use a slugifier for the output path.
 
     Args:
         target_ext (str):
@@ -254,7 +296,7 @@ def get_path_pairs(
 
 
 def get_temp(extension:str=False, root:str=False) -> str:
-    """Returns a path to a temporary file
+    """ Return a path to a temporary file
 
     Args:
         extension (str)
@@ -269,7 +311,7 @@ def get_temp(extension:str=False, root:str=False) -> str:
 
 
 def get_base_name(file_name:str) -> str:
-    """Strips a directory and and extension from a given path.
+    """ Strip a directory and extension from a given path.
 
     `/etc/foo/bar.baz` becomes `bar`
 
@@ -283,9 +325,7 @@ def get_base_name(file_name:str) -> str:
 
 
 def file_to_title(file_name:str) -> str:
-    """
-    Attempt to un-slugify a file name.
-    """
+    """ Attempt to un-slugify a file name. """
     base = get_base_name(file_name)
     base = base.replace("_"," ").replace("-"," - ").strip()
     elms = []

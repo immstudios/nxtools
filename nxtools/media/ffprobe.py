@@ -10,7 +10,20 @@ from nxtools.files import FileObject
 
 
 def ffprobe(input_file:str, verbose:bool=False) -> dict:
-    """Runs ffprobe on file and returns python dict with result"""
+    """
+    Extract metadata from a media file using ffprobe
+    and returns a dictionary object with the result
+
+    Args:
+        input_file (str): 
+            Path to the media file
+
+        verbose (bool): 
+            Log the ffprobe command. Default is False
+
+    Returns:
+        dict: metadata
+    """
     if isinstance(input_file, FileObject):
         exists = input_file.exists
         path = input_file.path

@@ -32,9 +32,8 @@ slug_separator_whitelist = " ,./\\;:!|*^#@~+-_="
 
 
 def indent(src, l:int=4):
-    """Indent a multi-line text
-    """
-    return "\n".join(["{}{}".format(l*" ", s.rstrip()) for s in src.split("\n")]) + "\n" if src.endswith("\n") else ""
+    """ Indent a multi-line text """
+    return "\n".join([f"{l*' '}{s.rstrip()}" for s in src.split("\n")]) + "\n" if src.endswith("\n") else ""
 
 def to_unicode(string:str) -> str:
     #DEPRECATED
@@ -62,14 +61,26 @@ def slugify(
 
     Args:
         input_string (str):
-        separator (str): string (default: "-")
-        lower (bool): Convert to lower-case (default: True)
-        make_set (bool): return "set" object instead of string
-        min_length (int): minimal length of an element (word)
-        slug_whitelist (str): characters allowed in the output
-                (default ascii letters, digits and the separator)
-        split_chars (str): set of characters used for word
-                splitting (there is a sane default)
+            Input string to slugify
+
+        separator (str): 
+            A string used to separate returned elements (default: "-")
+
+        lower (bool): 
+            Convert to lower-case (default: True)
+
+        make_set (bool):
+            Return "set" object instead of string
+
+        min_length (int): 
+            Minimal length of an element (word)
+
+        slug_whitelist (str): 
+            Characters allowed in the output
+            (default: ascii letters, digits and the separator)
+
+        split_chars (str): 
+            Set of characters used for word splitting (there is a sane default)
 
     """
     input_string = unaccent(input_string)
@@ -81,7 +92,7 @@ def slugify(
     return set(elements) if make_set else separator.join(elements)
 
 def string2color(string:str) -> str:
-    """Generate more or less unique color for a given string"""
+    """ Generate more or less unique color for a given string """
     h = 0
     for char in string:
         h = ord(char) + ((h << 5) - h)
@@ -97,7 +108,7 @@ def fract2float(fract) -> float:
         return 1
 
 def format_filesize(value):
-    """Returns a human readable filesize for a given byte count"""
+    """ Return a human readable filesize for a given byte count """
     if not value:
         return ""
     for x in ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB']:

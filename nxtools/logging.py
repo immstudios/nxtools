@@ -59,9 +59,7 @@ def log_to_file(log_path):
 # Logging
 
 class Logging():
-    """
-    nxtools universal logger
-    """
+    """ nxtools universal logger """
     def __init__(self, user=""):
         self.show_time = True
         self.show_colors = True

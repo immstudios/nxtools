@@ -19,6 +19,7 @@ class CasparResponse(object):
 
     @property
     def response(self) -> int:
+        """AMCP response code"""
         return self.code
 
     @property
@@ -50,7 +51,7 @@ class CasparCG(object):
         self.connection = False
 
     def connect(self, **kwargs) -> bool:
-        """Create connection to CasparCG Server"""
+        """Create a connection to CasparCG Server"""
         try:
             self.connection = telnetlib.Telnet(self.host, self.port, timeout=self.timeout)
         except ConnectionRefusedError:
@@ -65,7 +66,7 @@ class CasparCG(object):
         return True
 
     def query(self, query:str, **kwargs) -> CasparResponse:
-        """Send AMCP command"""
+        """Send an AMCP command"""
         if not self.connection:
             if not self.connect(**kwargs):
                 return CasparResponse(500, "Unable to connect CasparCG server")

@@ -4,12 +4,10 @@ __all__ = [
     "enable_ffmpeg_debug"
 ]
 
-import os
 import re
-import time
-import subprocess
-import copy
+import sys
 import signal
+import subprocess
 
 from nxtools.common import PLATFORM
 from nxtools.logging import *
@@ -27,7 +25,6 @@ def enable_ffmpeg_debug():
 def time2sec(search):
     hh, mm, ss, cs =  search.group(1), search.group(2), search.group(3), search.group(4)
     return int(hh)*3600 + int(mm)*60 + int(ss) + int(cs)/100.0
-    return sum([i**(2-i) * int(search.group(i+1)) for i in range(3)])
 
 class FFMPEG():
     def __init__(self, *args, **kwargs):
@@ -78,7 +75,7 @@ class FFMPEG():
         if not self.proc:
             return False
         if PLATFORM == "windows":
-            self.proc.send_signel(signal.CTRL_C_EVENT)
+            self.proc.send_signal(signal.CTRL_C_EVENT)
         else:
             self.proc.send_signal(signal.SIGINT)
         return True
@@ -118,7 +115,7 @@ class FFMPEG():
                 self.error_log += line + "\n"
 
             if FFMPEG_DEBUG:
-                print (line)
+                sys.stderr.write(line + "\n")
 
             self.buff = b""
         else:
@@ -127,20 +124,55 @@ class FFMPEG():
 
 
 
-def ffmpeg(*args, **kwargs):
-    """Universal ffmpeg wrapper with progress and error handling"""
+def ffmpeg(
+        *args, 
+        progress_handler=None,
+        stdin=subprocess.PIPE,
+        stdout=None,
+        stderr=subprocess.PIPE,
+        debug=False
+    ):
+    """
+    FFMpeg wrapper with progress and error handling
 
-    ff = FFMPEG(*args, **kwargs)
+    Args:
+        *args (list[any]): 
+            List of ffmpeg command line arguments.
+            Each argument is converted to a string.
+
+        progress_handler (function):
+            Function to be called with the current position (seconds) as argument.
+
+        stdin (file):
+            File object to be used as stdin.
+            Default is subprocess.PIPE
+        
+        stdout (file):
+            File object to be used as stdout.
+            Default is None
+
+        stderr (file):
+            File object to be used as stderr.
+            Default is subprocess.PIPE (used to compute progress).
+
+        debug (bool):
+            Enable debug mode (write ffmpeg output to stderr).
+
+    Returns:
+        boolean: indicate if the process was successful
+    """
+
+    ff = FFMPEG(*args, debug=debug)
     ff.start(
-            stdin=kwargs.get("stdin", subprocess.PIPE),
-            stdout=kwargs.get("stdout", None),
-            stderr=kwargs.get("stderr", subprocess.PIPE)
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
         )
 
-    ff.wait(kwargs.get("progress_handler", None))
+    ff.wait(progress_handler=progress_handler)
 
     if ff.return_code:
         err = indent(ff.error_log)
-        logging.error("Problem occured during transcoding\n\n{}\n\n".format(err))
+        logging.error(f"Problem occured during transcoding\n\n{err}\n\n")
         return False
     return True
