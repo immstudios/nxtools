@@ -18,20 +18,21 @@ def datestr2ts(datestr:str, hh:int=0, mm:int=0, ss:int=0) -> int:
     By default, start of the day (midnight) is returned.
 
     Args:
-        datestr (str): 
+        datestr (str):
             `YYYY-MM-DD` string
 
-        hh (int): 
+        hh (int):
             Hour (default: 0)
 
-        mm (int): 
+        mm (int):
             Minute (default: 0)
 
-        ss (int): 
+        ss (int):
             Second (default: 0)
 
     Returns:
-        int: Parsed unix timestamp
+        int:
+            Parsed unix timestamp
     """
     yy, mo, dd = [int(i) for i in datestr.split("-")]
     ttuple = [yy, mo, dd, hh, mm]
@@ -44,14 +45,15 @@ def tc2s(tc:str, base:float=25) -> float:
     """Convert an SMPTE timecode (HH:MM:SS:FF) to number of seconds
 
     Args:
-        tc (str): 
+        tc (str):
             Source timecode
 
-        base (float): 
+        base (float):
             Frame rate (default: 25)
 
     Returns:
-        float: Resulting value in seconds
+        float:
+            Resulting value in seconds
     """
     tc = tc.replace(";", ":")
     hh, mm, ss, ff = [int(e) for e in tc.split(":")]
@@ -62,24 +64,25 @@ def tc2s(tc:str, base:float=25) -> float:
     return res
 
 
-def s2time(secs:float, show_secs:bool=True, show_fracs:bool=True):
+def s2time(secs:float, show_secs:bool=True, show_fracs:bool=True) -> str:
     """Convert seconds to time
 
     Args:
         secs (float):
 
-        show_secs (bool): 
+        show_secs (bool):
             Show seconds (default: True)
 
-        show_fracs (bool): 
+        show_fracs (bool):
             Show centiseconds (default: True)
 
     Returns:
-        str: `HH:MM` / `HH:MM:SS` / `HH:MM:SS.CS` string
+        str:
+            `HH:MM` / `HH:MM:SS` / `HH:MM:SS.CS` string
     """
     try:
         secs = max(0, float(secs))
-    except:
+    except ValueError:
         placeholder = "--:--"
         if show_secs:
             placeholder += ":--"
@@ -99,21 +102,22 @@ def s2time(secs:float, show_secs:bool=True, show_fracs:bool=True):
             r += f".{centisecs:02d}"
     return r
 
-def f2tc(f, base=25):
+def f2tc(frames:int, base=25) -> str:
     """Convert frames to an SMPTE timecode
 
     Args:
-        f (int): 
+        frames (int):
             Frame count
 
-        base (float): 
+        base (float):
             Frame rate (default: 25)
 
     Returns:
-        str: SMPTE timecode (`HH:MM:SS:FF`)
+        str:
+            SMPTE timecode (`HH:MM:SS:FF`)
     """
     try:
-        f = max(0, int(f))
+        f = max(0, int(frames))
     except:
         return "--:--:--:--"
     hh = int((f / base) / 3600)
@@ -123,21 +127,22 @@ def f2tc(f, base=25):
     return f"{hh:02d}:{mm:02d}:{ss:02d}:{ff:02d}"
 
 
-def s2tc(s, base=25):
+def s2tc(secs:float, base:float=25) -> str:
     """Convert seconds to an SMPTE timecode
 
     Args:
-        s (float): 
+        secs (float):
             Number of seconds
 
-        base (float): 
+        base (float):
             Frame rate (default: 25)
 
     Returns:
-        str: SMPTE timecode (`HH:MM:SS:FF`)
+        str:
+            SMPTE timecode (`HH:MM:SS:FF`)
     """
     try:
-        f = max(0, int(s*base))
+        f = max(0, int(secs*base))
     except:
         return "--:--:--:--"
     hh = int((f / base) / 3600)
@@ -148,18 +153,20 @@ def s2tc(s, base=25):
     return f"{hd:02d}:{mm:02d}:{ss:02d}:{ff:02d}"
 
 
-def s2words(s):
+def s2words(secs:int) -> str:
     """Create a textual (english) representation of given number of seconds.
 
     This function is useful for showing estimated time of a process.
 
     Args:
-        s (int) : Number of seconds
+        secs (int):
+            Number of seconds
 
     Returns:
-        str : Textual information
+        str:
+            Textual information
     """
-    s = int(s)
+    s = int(secs)
     if s < 60:
         return f"{s} seconds".format(s)
     elif s < 120:
@@ -171,29 +178,30 @@ def s2words(s):
 
 
 def format_time(
-        timestamp=None, 
-        time_format="%Y-%m-%d %H:%M:%S", 
-        never_placeholder="never", 
-        gmt=False
-    ):
+        timestamp:int=None,
+        time_format:str="%Y-%m-%d %H:%M:%S",
+        never_placeholder:str="never",
+        gmt:bool=False
+    ) -> str:
     """Format an Unix timestamp as a local or GMT time
 
     Args:
-        timestamp (int): 
+        timestamp (int):
             input unix timestamp
 
-        time_format (str): 
-            strftime specification 
+        time_format (str):
+            strftime specification
             (default: "%Y-%m-%d %H:%M:%S" - the correct one)
 
-        never_placeholder (str): 
+        never_placeholder (str):
             text used when timestamp is not specified (default: "never")
 
-        gmt (bool): 
+        gmt (bool):
             Use GMT time instead of local time (default: False)
 
     Returns:
-        str: Formatted time
+        str:
+            Formatted time
     """
     if not timestamp:
         return never_placeholder
