@@ -1,3 +1,10 @@
+1.6
+ - Switched to Poetry
+ - Clean up
+
+1.5.3
+ - Many minor fixes and clean-ups
+
 1.5
  - Documentation, dropped support for Python version <3.6
 

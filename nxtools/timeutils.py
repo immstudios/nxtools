@@ -64,8 +64,12 @@ def tc2s(tc:str, base:float=25) -> float:
     return res
 
 
-def s2time(secs:float, show_secs:bool=True, show_fracs:bool=True) -> str:
-    """Convert seconds to time
+def s2time(
+    secs: float,
+    show_secs: bool = True,
+    show_fracs: bool = True
+) -> str:
+    """Convert seconds to time.
 
     Args:
         secs (float):
@@ -102,7 +106,7 @@ def s2time(secs:float, show_secs:bool=True, show_fracs:bool=True) -> str:
             r += f".{centisecs:02d}"
     return r
 
-def f2tc(frames:int, base=25) -> str:
+def f2tc(frames: int, base: float = 25) -> str:
     """Convert frames to an SMPTE timecode
 
     Args:
@@ -118,7 +122,7 @@ def f2tc(frames:int, base=25) -> str:
     """
     try:
         f = max(0, int(frames))
-    except:
+    except ValueError:
         return "--:--:--:--"
     hh = int((f / base) / 3600)
     mm = int(((f / base) / 60) - (hh*60))
@@ -127,7 +131,7 @@ def f2tc(frames:int, base=25) -> str:
     return f"{hh:02d}:{mm:02d}:{ss:02d}:{ff:02d}"
 
 
-def s2tc(secs:float, base:float=25) -> str:
+def s2tc(secs: float, base: float=25) -> str:
     """Convert seconds to an SMPTE timecode
 
     Args:
@@ -143,7 +147,7 @@ def s2tc(secs:float, base:float=25) -> str:
     """
     try:
         f = max(0, int(secs*base))
-    except:
+    except ValueError:
         return "--:--:--:--"
     hh = int((f / base) / 3600)
     hd = int((hh % 24))
@@ -153,7 +157,7 @@ def s2tc(secs:float, base:float=25) -> str:
     return f"{hd:02d}:{mm:02d}:{ss:02d}:{ff:02d}"
 
 
-def s2words(secs:int) -> str:
+def s2words(secs: int) -> str:
     """Create a textual (english) representation of given number of seconds.
 
     This function is useful for showing estimated time of a process.

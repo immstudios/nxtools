@@ -10,7 +10,7 @@ import signal
 import subprocess
 
 from nxtools.common import PLATFORM
-from nxtools.logging import *
+from nxtools.logging import logging
 from nxtools.text import indent
 
 

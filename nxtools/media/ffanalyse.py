@@ -8,9 +8,7 @@ import signal
 import subprocess
 
 from nxtools.common import PLATFORM
-from nxtools.logging import *
-from nxtools.version import PYTHON_VERSION
-from nxtools.media.ffmpeg import FFMPEG_DEBUG
+from nxtools.logging import logging
 
 
 class FFAnalyse():
@@ -159,7 +157,6 @@ class FFAnalyse():
                 if n / float(tot) < .9:
                     result["is_interlaced"] = True
         return result
-
 
 
 def ffanalyse(input_path, **kwargs):
