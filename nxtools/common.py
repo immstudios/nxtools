@@ -1,29 +1,19 @@
 __all__ = [
-    "decode_if_py3",
-    "encode_if_py3",
     "PLATFORM",
     "find_binary",
     "get_guid",
     "xml",
-    "string_type",
-    "string_types"
 ]
 
 import os
 import sys
 import uuid
-
 from xml.etree import ElementTree
-
-# DEPRECATED
-decode_if_py3 = lambda x, enc="utf-8": x.decode(enc)
-encode_if_py3 = lambda x, enc="utf-8": bytes(x, enc) if type(x) == str else x
-string_type = str
-string_types = [str]
 
 PLATFORM = "windows" if sys.platform == "win32" else "unix"
 
-def xml(data):
+
+def xml(data: str) -> ElementTree.Element | None:
     """Parse an XML string using ElementTree
 
     Args:
@@ -34,6 +24,7 @@ def xml(data):
     """
     return ElementTree.XML(data)
 
+
 def get_guid() -> str:
     """Return a GUID
 
@@ -42,7 +33,8 @@ def get_guid() -> str:
     """
     return str(uuid.uuid1())
 
-def find_binary(file_name:str) -> str:
+
+def find_binary(file_name: str) -> str | None:
     """Attempt to find a given executable and return its path
 
     Args:

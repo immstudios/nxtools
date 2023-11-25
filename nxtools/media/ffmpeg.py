@@ -1,22 +1,21 @@
 __all__ = [
-    "FFMPEG", 
-    "ffmpeg", 
+    "FFMPEG",
+    "ffmpeg",
     "enable_ffmpeg_debug"
 ]
 
 import re
-import sys
 import signal
 import subprocess
+import sys
 
 from nxtools.common import PLATFORM
 from nxtools.logging import logging
 from nxtools.text import indent
 
-
 FFMPEG_DEBUG = False
 
-re_position = re.compile('time=(\d{2}):(\d{2}):(\d{2})\.(\d{2})\d*', re.U | re.I)
+re_position = re.compile(r'time=(\d{2}):(\d{2}):(\d{2})\.(\d{2})\d*', re.U | re.I)
 
 def enable_ffmpeg_debug():
     global FFMPEG_DEBUG
@@ -125,7 +124,7 @@ class FFMPEG():
 
 
 def ffmpeg(
-        *args, 
+        *args,
         progress_handler=None,
         stdin=subprocess.PIPE,
         stdout=None,
@@ -136,7 +135,7 @@ def ffmpeg(
     FFMpeg wrapper with progress and error handling
 
     Args:
-        *args (list[any]): 
+        *args (list[any]):
             List of ffmpeg command line arguments.
             Each argument is converted to a string.
 
@@ -146,7 +145,7 @@ def ffmpeg(
         stdin (file):
             File object to be used as stdin.
             Default is subprocess.PIPE
-        
+
         stdout (file):
             File object to be used as stdout.
             Default is None

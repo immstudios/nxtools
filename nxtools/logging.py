@@ -1,3 +1,5 @@
+"""nxtools logger."""
+
 __all__ = [
     "Logging",
     "logging",
@@ -6,11 +8,11 @@ __all__ = [
     "log_to_file"
 ]
 
+import functools
 import os
 import sys
 import time
 import traceback
-import functools
 
 from .common import PLATFORM
 from .text import indent
@@ -26,16 +28,22 @@ except ModuleNotFoundError:
 
 DEBUG, INFO, WARNING, ERROR, GOOD_NEWS = range(5)
 
+SBB = Style.BRIGHT + Fore.BLACK
+SR = Style.RESET_ALL
+SN = Style.NORMAL
+
 # Log handlers
+
 
 def null_handler(**kwargs):
     return True
 
 
 def log_to_file(log_path):
+    """Log to file handler."""
     def log_to_file_handler(path, **kwargs):
         placeholders = {
-            "date" : format_time(time.time(), "%Y-%m-%d")
+            "date": format_time(time.time(), "%Y-%m-%d")
         }
         path = path.format(**placeholders)
         dirname, _ = os.path.split(path)
@@ -45,21 +53,21 @@ def log_to_file(log_path):
         with open(path, "a") as f:
             tstamp = format_time(time.time())
             ltype = {
-                   0 : "DEBUG    ",
-                   1 : "INFO     ",
-                   2 : "WARNING  ",
-                   3 : "ERROR    ",
-                   4 : "GOOD NEWS"
+                   0: "DEBUG    ",
+                   1: "INFO     ",
+                   2: "WARNING  ",
+                   3: "ERROR    ",
+                   4: "GOOD NEWS"
                 }[kwargs["message_type"]]
             f.write(f"{tstamp}  {ltype}  {kwargs['message']}\n")
-
     return functools.partial(log_to_file_handler, log_path)
 
 
 # Logging
 
 class Logging():
-    """ nxtools universal logger """
+    """nxtools universal logger."""
+
     def __init__(self, user=""):
         self.show_time = True
         self.show_colors = True
@@ -75,28 +83,28 @@ class Logging():
             GOOD_NEWS : "\033[1;30m{timestamp}\033[0m\033[32m{type}\033[0m {user} {message}"
         }
 
-
         self.formats_nocolor = {
-            DEBUG     : "{timestamp}{type} {user} {message}",
-            INFO      : "{timestamp}{type} {user} {message}",
-            WARNING   : "{timestamp}{type} {user} {message}",
-            ERROR     : "{timestamp}{type} {user} {message}",
-            GOOD_NEWS : "{timestamp}{type} {user} {message}"
+            DEBUG: "{timestamp}{type} {user} {message}",
+            INFO: "{timestamp}{type} {user} {message}",
+            WARNING: "{timestamp}{type} {user} {message}",
+            ERROR: "{timestamp}{type} {user} {message}",
+            GOOD_NEWS: "{timestamp}{type} {user} {message}"
         }
 
         if has_colorama:
             self.formats_colorama = {
-                DEBUG     : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.RESET_ALL + Fore.BLUE + "{type}" + "{user} {message}" + Style.RESET_ALL,
-                INFO      : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.WHITE  + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
-                WARNING   : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.YELLOW + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
-                ERROR     : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.RED    + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
-                GOOD_NEWS : Style.BRIGHT + Fore.BLACK + "{timestamp}" + Style.NORMAL + Fore.GREEN  + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL
+                DEBUG     : SBB + "{timestamp}" + Style.RESET_ALL + Fore.BLUE + "{type}" + "{user} {message}" + Style.RESET_ALL,
+                INFO      : SBB + "{timestamp}" + Style.NORMAL + Fore.WHITE  + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
+                WARNING   : SBB + "{timestamp}" + Style.NORMAL + Fore.YELLOW + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
+                ERROR     : SBB + "{timestamp}" + Style.NORMAL + Fore.RED    + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
+                GOOD_NEWS : SBB + "{timestamp}" + Style.NORMAL + Fore.GREEN  + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL
             }
         else:
             self.formats_colorama = self.formats_nocolor
 
     def add_handler(self, handler):
-        if not handler in self.handlers:
+        """Add a new logging handler."""
+        if handler not in self.handlers:
             self.handlers.append(handler)
 
     def _send(self, msgtype, *args, **kwargs):
@@ -108,15 +116,16 @@ class Logging():
                 handler(user=self.user, message_type=msgtype, message=message)
 
         ldata = {
-            "user" : f" {user:<15}" if user else "",
-            "message" : message,
-            "timestamp" :format_time(time.time()) + " " if self.show_time else "",
-            "type" : {
-                DEBUG     : "DEBUG     ",
-                INFO      : "INFO      ",
-                WARNING   : "WARNING   ",
-                ERROR     : "ERROR     ",
-                GOOD_NEWS : "GOOD NEWS "
+            "user": f" {user:<15}" if user else "",
+            "message": message,
+            "timestamp": format_time(time.time()) +
+            " " if self.show_time else "",
+            "type": {
+                DEBUG: "DEBUG     ",
+                INFO: "INFO      ",
+                WARNING: "WARNING   ",
+                ERROR: "ERROR     ",
+                GOOD_NEWS: "GOOD NEWS "
             }[msgtype]
         }
 
@@ -132,32 +141,32 @@ class Logging():
         except Exception:
             pass
 
-
     def debug(self, *args, **kwargs):
-        """Log a debug message"""
+        """Log a debug message."""
         self._send(DEBUG, *args, **kwargs)
 
     def info(self, *args, **kwargs):
-        """Log an info message"""
+        """Log an info message."""
         self._send(INFO, *args, **kwargs)
 
     def warning(self, *args, **kwargs):
-        """Log a warning message"""
+        """Log a warning message."""
         self._send(WARNING, *args, **kwargs)
 
     def error(self, *args, **kwargs):
-        """Log an error message"""
+        """Log an error message."""
         self._send(ERROR, *args, **kwargs)
 
     def goodnews(self, *args, **kwargs):
-        """Log good news"""
+        """Log good news."""
         self._send(GOOD_NEWS, *args, **kwargs)
+
 
 logging = Logging()
 
 
 def log_traceback(message="Exception!", **kwargs):
-    """Log the current exception traceback"""
+    """Log the current exception traceback."""
     tb = traceback.format_exc()
     msg = f"{message}\n\n{indent(tb)}"
     logging.error(msg, **kwargs)

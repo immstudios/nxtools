@@ -1,111 +1,193 @@
-__all__ = [
-    "CasparCG",
-    "CasparResponse"
-]
+__all__ = ["CasparCG"]
 
+import selectors
 import socket
-import telnetlib
+import time
 
-from .. import logging, log_traceback
-
-
-DELIM = b"\r\n"
-
-class CasparResponse(object):
-    """Caspar query response object"""
-    def __init__(self, code, data):
-        self.code = code
-        self.data = data
-
-    @property
-    def response(self) -> int:
-        """AMCP response code"""
-        return self.code
-
-    @property
-    def is_error(self) -> bool:
-        """Returns True if query failed"""
-        return self.code >= 400
-
-    @property
-    def is_success(self) -> bool:
-        """Returns True if query succeeded"""
-        return self.code < 400
-
-    def __repr__(self):
-        if self.is_success:
-            return "<Caspar response: OK>"
-        return f"<CasparResponse: Error {self.code}>"
-
-    def __len__(self):
-        return self.is_success
+theNULL = bytes([0])
 
 
-class CasparCG(object):
-    """CasparCG client object"""
-    def __init__(self, host:str="localhost", port:int=5250, timeout:float=2):
-        assert isinstance(port, int) and port <= 65535, "Invalid port number"
+if hasattr(selectors, "PollSelector"):
+    _TelnetSelector = selectors.PollSelector
+else:
+    _TelnetSelector = selectors.SelectSelector
+
+
+class CasparException(Exception):
+    """Exception raised for errors in the CasparCG client."""
+
+    pass
+
+
+class CasparCG:
+    def __init__(
+        self,
+        host: str = "localhost",
+        port: int = 5250,
+        timeout: float = 5,
+    ) -> None:
         self.host = host
         self.port = port
         self.timeout = timeout
-        self.connection = False
+        self.sock = None
+        self.rawq = b""
+        self.irawq = 0
+        self.cookedq = b""
+        self.eof = 0
 
-    def connect(self, **kwargs) -> bool:
-        """Create a connection to CasparCG Server"""
+    def open(self):
+        """Establish a connection to the host at the given port.
+
+        If the connection is already open, close it first.
+        """
+        if self.sock:
+            self.close()
+        self.eof = 0
+        self.sock = socket.create_connection((self.host, self.port), self.timeout)
+
+    def close(self) -> None:
+        """Close the connection."""
+        sock = self.sock
+        self.sock = None
+        self.eof = True
+        if sock:
+            sock.close()
+
+    def __del__(self):
+        self.close()
+
+    def fileno(self) -> int | None:
+        """Return the fileno() of the socket object used internally."""
+        # this is needed for select(), do not remove
+        if not self.sock:
+            return None
+        return self.sock.fileno()
+
+    def query(self, command: str, timeout=None) -> str | None:
+        """Execute a given AMCP command and return the response"""
+        if not self.sock:
+            self.open()
+
+        if not self.sock:
+            raise CasparException("Connection failed")
+
+        buffer = f"{command}\r\n".encode("utf-8")
         try:
-            self.connection = telnetlib.Telnet(self.host, self.port, timeout=self.timeout)
-        except ConnectionRefusedError:
-            logging.error(f"Unable to connect CasparCG server at {self.host}:{self.port}. Connection refused")
-            return False
-        except socket.timeout:
-            logging.error(f"Unable to connect CasparCG server at {self.host}:{self.port}. Timeout.")
-            return False
-        except Exception:
-            log_traceback()
-            return False
-        return True
-
-    def query(self, query:str, **kwargs) -> CasparResponse:
-        """Send an AMCP command"""
-        if not self.connection:
-            if not self.connect(**kwargs):
-                return CasparResponse(500, "Unable to connect CasparCG server")
-
-        query = query.strip()
-        if kwargs.get("verbose", True):
-            if not query.startswith("INFO"):
-                logging.debug(f"Executing AMCP: {query}")
-
-        query = bytes(query.encode("utf-8")) + DELIM
-
-        try:
-            self.connection.write(query)
-            result = self.connection.read_until(DELIM).strip()
+            self.sock.sendall(buffer)
         except ConnectionResetError:
-            self.connection = None
-            return CasparResponse(500, "Connection reset by peer")
-        except Exception:
-            log_traceback()
-            return CasparResponse(500, "Query failed")
+            self.close()
+            raise CasparException("AMCP send failed")
 
-        result = result.decode("utf-8")
+        response = self.read(timeout).decode("utf-8")
 
-        if not result:
-            return CasparResponse(500, "No result")
+        if not response:
+            raise CasparException("No data")
 
+        if response[:3] == "202":
+            return None
+
+        if response[:1] in ["3", "4", "5"]:
+            raise CasparException(response)
+
+        if response[:3] in ["201", "200"]:
+            data = self.read().decode("utf-8").strip()
+            return data
+
+    def read(self, timeout: float | None = None) -> bytes:
+        match = b"\r\n"
+
+        n = len(match)
+        self.process_rawq()
+        i = self.cookedq.find(match)
+        if i >= 0:
+            i = i + n
+            buf = self.cookedq[:i]
+            self.cookedq = self.cookedq[i:]
+            return buf
+        if timeout is not None:
+            deadline = time.monotonic() + timeout
+        with _TelnetSelector() as selector:
+            selector.register(self, selectors.EVENT_READ)
+            while not self.eof:
+                if selector.select(timeout):
+                    i = max(0, len(self.cookedq) - n)
+                    self.fill_rawq()
+                    self.process_rawq()
+                    i = self.cookedq.find(match, i)
+                    if i >= 0:
+                        i = i + n
+                        buf = self.cookedq[:i]
+                        self.cookedq = self.cookedq[i:]
+                        return buf
+                if timeout is not None:
+                    timeout = deadline - time.monotonic()
+                    if timeout < 0:
+                        break
+
+        buf = self.cookedq
+        self.cookedq = b""
+        if not buf and self.eof and not self.rawq:
+            raise EOFError("telnet connection closed")
+        return buf
+
+    def process_rawq(self):
+        if not self.sock:
+            return
+        buf = b""
         try:
-            if result[:3] == "202":
-                return CasparResponse(202, "No result")
+            while self.rawq:
+                c = self.rawq_getchar()
+                if c == theNULL:
+                    continue
+                if c == b"\021":
+                    continue
+                buf += c
+        except EOFError:  # raised by self.rawq_getchar()
+            pass
+        self.cookedq = self.cookedq + buf
 
-            elif result[:3] in ["201", "200"]:
-                stat = int(result[0:3])
-                result = self.connection.read_until(DELIM).decode("utf-8").strip()
-                return CasparResponse(stat, result)
+    def rawq_getchar(self):
+        """Get next char from raw queue.
 
-            elif result[0] in ["3", "4", "5"]:
-                stat = int(result[0:3])
-                return CasparResponse(stat, result)
+        Block if no data is immediately available.  Raise EOFError
+        when connection is closed.
 
-        except Exception:
-            return CasparResponse(500, f"Malformed result: {result}")
-        return CasparResponse(500, f"Unexpected result: {result}")
+        """
+        if not self.rawq:
+            self.fill_rawq()
+            if self.eof:
+                raise EOFError
+        c = self.rawq[self.irawq : self.irawq + 1]
+        self.irawq = self.irawq + 1
+        if self.irawq >= len(self.rawq):
+            self.rawq = b""
+            self.irawq = 0
+        return c
+
+    def fill_rawq(self) -> None:
+        """Fill raw queue from exactly one recv() system call.
+
+        Block if no data is immediately available.  Set self.eof when
+        connection is closed.
+
+        """
+
+        assert self.sock is not None
+
+        if self.irawq >= len(self.rawq):
+            self.rawq = b""
+            self.irawq = 0
+        # The buffer size should be fairly small so as to avoid quadratic
+        # behavior in process_rawq() above
+        buf = self.sock.recv(50)
+        self.eof = not buf
+        self.rawq = self.rawq + buf
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        # Keep linters happy
+        _ = type, value, traceback
+        self.close()
+

@@ -1,7 +1,7 @@
-import nxtools
-import textwrap
 import subprocess
+import textwrap
 
+import nxtools
 
 DOC_IGNORE = """
 __builtins__
@@ -60,7 +60,6 @@ Reference
 """
 
 
-
 def test():
     subprocess.run(
         ['python', '-u', '-m', 'unittest', 'discover']
@@ -93,7 +92,6 @@ def docs():
                 break
             description += line.strip() + "\n"
             doclines.pop(0)
-
 
         result += f"\n### {name}\n\n{summary}\n"
         if description.strip():

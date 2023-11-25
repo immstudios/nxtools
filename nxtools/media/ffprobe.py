@@ -1,12 +1,12 @@
 __all__ = ["ffprobe"]
 
-import os
 import json
+import os
 import subprocess
 
-from nxtools.text import indent
-from nxtools.logging import *
 from nxtools.files import FileObject
+from nxtools.logging import *
+from nxtools.text import indent
 
 
 def ffprobe(input_file:str, verbose:bool=False) -> dict:
@@ -15,10 +15,10 @@ def ffprobe(input_file:str, verbose:bool=False) -> dict:
     and returns a dictionary object with the result
 
     Args:
-        input_file (str): 
+        input_file (str):
             Path to the media file
 
-        verbose (bool): 
+        verbose (bool):
             Log the ffprobe command. Default is False
 
     Returns:

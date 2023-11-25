@@ -1,18 +1,12 @@
-__all__ = [
-    "datestr2ts",
-    "tc2s",
-    "s2time",
-    "f2tc",
-    "s2tc",
-    "s2words",
-    "format_time"
-]
+"""Time related utilities."""
 
-import time
+__all__ = ["datestr2ts", "tc2s", "s2time", "f2tc", "s2tc", "s2words", "format_time"]
+
 import datetime
+import time
 
 
-def datestr2ts(datestr:str, hh:int=0, mm:int=0, ss:int=0) -> int:
+def datestr2ts(datestr: str, hh: int = 0, mm: int = 0, ss: int = 0) -> int:
     """Convert a `YYYY-MM-DD` string to an unix timestamp.
 
     By default, start of the day (midnight) is returned.
@@ -41,8 +35,8 @@ def datestr2ts(datestr:str, hh:int=0, mm:int=0, ss:int=0) -> int:
     return tstamp
 
 
-def tc2s(tc:str, base:float=25) -> float:
-    """Convert an SMPTE timecode (HH:MM:SS:FF) to number of seconds
+def tc2s(tc: str, base: float = 25) -> float:
+    """Convert an SMPTE timecode (HH:MM:SS:FF) to number of seconds.
 
     Args:
         tc (str):
@@ -64,11 +58,7 @@ def tc2s(tc:str, base:float=25) -> float:
     return res
 
 
-def s2time(
-    secs: float,
-    show_secs: bool = True,
-    show_fracs: bool = True
-) -> str:
+def s2time(secs: float, show_secs: bool = True, show_fracs: bool = True) -> str:
     """Convert seconds to time.
 
     Args:
@@ -97,8 +87,8 @@ def s2time(
     centisecs = int((secs - wholesecs) * 100)
     hh = int(wholesecs / 3600)
     hd = int(hh % 24)
-    mm = int((wholesecs / 60) - (hh*60))
-    ss = int(wholesecs - (hh*3600) - (mm*60))
+    mm = int((wholesecs / 60) - (hh * 60))
+    ss = int(wholesecs - (hh * 3600) - (mm * 60))
     r = f"{hd:02d}:{mm:02d}"
     if show_secs:
         r += f":{ss:02d}"
@@ -106,8 +96,9 @@ def s2time(
             r += f".{centisecs:02d}"
     return r
 
+
 def f2tc(frames: int, base: float = 25) -> str:
-    """Convert frames to an SMPTE timecode
+    """Convert frames to an SMPTE timecode.
 
     Args:
         frames (int):
@@ -125,14 +116,14 @@ def f2tc(frames: int, base: float = 25) -> str:
     except ValueError:
         return "--:--:--:--"
     hh = int((f / base) / 3600)
-    mm = int(((f / base) / 60) - (hh*60))
-    ss = int((f/base) - (hh*3600) - (mm*60))
-    ff = int(f - (hh*3600*base) - (mm*60*base) - (ss*base))
+    mm = int(((f / base) / 60) - (hh * 60))
+    ss = int((f / base) - (hh * 3600) - (mm * 60))
+    ff = int(f - (hh * 3600 * base) - (mm * 60 * base) - (ss * base))
     return f"{hh:02d}:{mm:02d}:{ss:02d}:{ff:02d}"
 
 
-def s2tc(secs: float, base: float=25) -> str:
-    """Convert seconds to an SMPTE timecode
+def s2tc(secs: float, base: float = 25) -> str:
+    """Convert seconds to an SMPTE timecode.
 
     Args:
         secs (float):
@@ -146,14 +137,14 @@ def s2tc(secs: float, base: float=25) -> str:
             SMPTE timecode (`HH:MM:SS:FF`)
     """
     try:
-        f = max(0, int(secs*base))
+        f = max(0, int(secs * base))
     except ValueError:
         return "--:--:--:--"
     hh = int((f / base) / 3600)
     hd = int((hh % 24))
-    mm = int(((f / base) / 60) - (hh*60))
-    ss = int((f/base) - (hh*3600) - (mm*60))
-    ff = int(f - (hh*3600*base) - (mm*60*base) - (ss*base))
+    mm = int(((f / base) / 60) - (hh * 60))
+    ss = int((f / base) - (hh * 3600) - (mm * 60))
+    ff = int(f - (hh * 3600 * base) - (mm * 60 * base) - (ss * base))
     return f"{hd:02d}:{mm:02d}:{ss:02d}:{ff:02d}"
 
 
@@ -182,12 +173,12 @@ def s2words(secs: int) -> str:
 
 
 def format_time(
-        timestamp:int=None,
-        time_format:str="%Y-%m-%d %H:%M:%S",
-        never_placeholder:str="never",
-        gmt:bool=False
-    ) -> str:
-    """Format an Unix timestamp as a local or GMT time
+    timestamp: int | None = None,
+    time_format: str = "%Y-%m-%d %H:%M:%S",
+    never_placeholder: str = "never",
+    gmt: bool = False,
+) -> str:
+    """Format an Unix timestamp as a local or GMT time.
 
     Args:
         timestamp (int):
@@ -209,4 +200,8 @@ def format_time(
     """
     if not timestamp:
         return never_placeholder
-    return time.strftime(time_format, time.gmtime(timestamp) if gmt else time.localtime(timestamp))
+    if gmt:
+        tstruct = time.gmtime(timestamp)
+    else:
+        tstruct = time.localtime(timestamp)
+    return time.strftime(time_format, tstruct)

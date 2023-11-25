@@ -2,6 +2,7 @@ import unittest
 
 from nxtools import *
 
+
 class TestJoinPath(unittest.TestCase):
     def test_strings(self):
         result = join_path("/usr", "bin", "env")

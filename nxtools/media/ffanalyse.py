@@ -1,7 +1,4 @@
-__all__ = [
-    "FFAnalyse", 
-    "ffanalyse"
-]
+__all__ = ["FFAnalyse", "ffanalyse"]
 
 import re
 import signal
@@ -11,7 +8,7 @@ from nxtools.common import PLATFORM
 from nxtools.logging import logging
 
 
-class FFAnalyse():
+class FFAnalyse:
     def __init__(self, input_path, **kwargs):
         self.proc = None
         self.cmd = ["ffmpeg", "-y"]
@@ -71,7 +68,9 @@ class FFAnalyse():
         return self.proc.stderr
 
     @property
-    def return_code(self):
+    def return_code(self) -> int | None:
+        if not self.proc:
+            return None
         return self.proc.returncode
 
     def stop(self):
@@ -88,15 +87,15 @@ class FFAnalyse():
         self.reset_stderr()
         result = {}
         tags = [
-                ("mean_volume:", "gain/mean"),
-                ("max_volume:",  "gain/peak"),
-                ("I:",           "r128/i"),
-                ("Threshold:",   "r128/t"),
-                ("LRA:",         "r128/lra"),
-                ("Threshold:",   "r128/lra/t"),
-                ("LRA low:",     "r128/lra/l"),
-                ("LRA high:",    "r128/lra/r"),
-            ]
+            ("mean_volume:", "gain/mean"),
+            ("max_volume:", "gain/peak"),
+            ("I:", "r128/i"),
+            ("Threshold:", "r128/t"),
+            ("LRA:", "r128/lra"),
+            ("Threshold:", "r128/lra/t"),
+            ("LRA low:", "r128/lra/l"),
+            ("LRA high:", "r128/lra/r"),
+        ]
         logging.debug("Executing", " ".join(self.cmd))
         self.proc = subprocess.Popen(self.cmd, stderr=subprocess.PIPE)
         silences = []
@@ -119,7 +118,10 @@ class FFAnalyse():
                         progress_handler(int(m.group(1)))
 
                 elif line.find("silence_end") > -1:
-                    m = re.match(r".*silence_end:\s*(\d+\.?\d*).*silence_duration:\s*(\d+\.?\d*).*", line)
+                    m = re.match(
+                        r".*silence_end:\s*(\d+\.?\d*).*silence_duration:\s*(\d+\.?\d*).*",
+                        line,
+                    )
                     if m:
                         e = float(m.group(1))
                         s = max(0, e - float(m.group(2)))
@@ -130,7 +132,7 @@ class FFAnalyse():
 
                 elif line.find(exp_tag[0]) > -1:
                     value = float(line.split()[-2])
-                    result[exp_tag[1]] =  value
+                    result[exp_tag[1]] = value
                     try:
                         exp_tag = tags.pop(0)
                     except IndexError:
@@ -154,7 +156,7 @@ class FFAnalyse():
                 t = int(m.group(2))
                 b = int(m.group(3))
                 tot = n + t + b
-                if n / float(tot) < .9:
+                if n / float(tot) < 0.9:
                     result["is_interlaced"] = True
         return result
 

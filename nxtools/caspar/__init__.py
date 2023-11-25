@@ -1,1 +1,3 @@
-from .caspar import CasparCG, CasparResponse
+__all__ = ["CasparCG"]
+
+from .caspar import CasparCG
