@@ -1,7 +1,3 @@
-"""Time related utilities."""
-
-__all__ = ["datestr2ts", "tc2s", "s2time", "f2tc", "s2tc", "s2words", "format_time"]
-
 import datetime
 import time
 
@@ -28,10 +24,18 @@ def datestr2ts(datestr: str, hh: int = 0, mm: int = 0, ss: int = 0) -> int:
         int:
             Parsed unix timestamp
     """
-    yy, mo, dd = [int(i) for i in datestr.split("-")]
-    ttuple = [yy, mo, dd, hh, mm]
-    dt = datetime.datetime(*ttuple)
-    tstamp = int(time.mktime(dt.timetuple()))
+    split = datestr.split("-")
+    if len(split) != 3:
+        raise ValueError("Invalid date string")
+    if not all(e.isdigit() for e in split):
+        raise ValueError("Invalid date string")
+    dt = datetime.datetime(
+        int(split[0]),
+        int(split[1].lstrip("0")),
+        int(split[2].lstrip("0")),
+    )
+    offset = datetime.timedelta(hours=hh, minutes=mm, seconds=ss)
+    tstamp = int(time.mktime((dt + offset).timetuple()))
     return tstamp
 
 
@@ -50,7 +54,7 @@ def tc2s(tc: str, base: float = 25) -> float:
             Resulting value in seconds
     """
     tc = tc.replace(";", ":")
-    hh, mm, ss, ff = [int(e) for e in tc.split(":")]
+    hh, mm, ss, ff = (int(e) for e in tc.split(":"))
     res = hh * 3600
     res += mm * 60
     res += ss
@@ -141,7 +145,7 @@ def s2tc(secs: float, base: float = 25) -> str:
     except ValueError:
         return "--:--:--:--"
     hh = int((f / base) / 3600)
-    hd = int((hh % 24))
+    hd = int(hh % 24)
     mm = int(((f / base) / 60) - (hh * 60))
     ss = int((f / base) - (hh * 3600) - (mm * 60))
     ff = int(f - (hh * 3600 * base) - (mm * 60 * base) - (ss * base))
@@ -173,7 +177,7 @@ def s2words(secs: int) -> str:
 
 
 def format_time(
-    timestamp: int | None = None,
+    timestamp: float | None = None,
     time_format: str = "%Y-%m-%d %H:%M:%S",
     never_placeholder: str = "never",
     gmt: bool = False,
@@ -200,8 +204,5 @@ def format_time(
     """
     if not timestamp:
         return never_placeholder
-    if gmt:
-        tstruct = time.gmtime(timestamp)
-    else:
-        tstruct = time.localtime(timestamp)
+    tstruct = time.gmtime(timestamp) if gmt else time.localtime(timestamp)
     return time.strftime(time_format, tstruct)

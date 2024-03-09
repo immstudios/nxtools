@@ -328,7 +328,7 @@ def file_to_title(file_name: str) -> str:
     base = base.replace("_", " ").replace("-", " - ").strip()
     elms = []
     capd = False
-    for i, elm in enumerate(base.split(" ")):
+    for _i, elm in enumerate(base.split(" ")):
         if not elm:
             continue
         if not capd and not (elm.isdigit() or elm.upper() == elm):
@@ -338,9 +338,11 @@ def file_to_title(file_name: str) -> str:
     return " ".join(elms)
 
 
-def get_file_siblings(path, exts=[]):
+def get_file_siblings(path, exts=None):
     """Find sidecar files."""
     # TODO: Rewrite this
+    if exts is None:
+        exts = []
     root = os.path.splitext(path)[0]
     for f in exts:
         tstf = root + "." + f
@@ -362,9 +364,9 @@ def get_file_size(path: str) -> int:
         int: file size in bytes
     """
     try:
-        f = open(str(path), "rb")
+        with open(str(path), "rb") as f:
+            f.seek(0, 2)
+            return f.tell()
     except Exception:
         log_traceback(f"Exception! File {path} is not accessible")
         return 0
-    f.seek(0, 2)
-    return f.tell()

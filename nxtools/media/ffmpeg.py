@@ -1,8 +1,4 @@
-__all__ = [
-    "FFMPEG",
-    "ffmpeg",
-    "enable_ffmpeg_debug"
-]
+__all__ = ["FFMPEG", "ffmpeg", "enable_ffmpeg_debug"]
 
 import re
 import signal
@@ -15,17 +11,20 @@ from nxtools.text import indent
 
 FFMPEG_DEBUG = False
 
-re_position = re.compile(r'time=(\d{2}):(\d{2}):(\d{2})\.(\d{2})\d*', re.U | re.I)
+re_position = re.compile(r"time=(\d{2}):(\d{2}):(\d{2})\.(\d{2})\d*", re.U | re.I)
+
 
 def enable_ffmpeg_debug():
     global FFMPEG_DEBUG
     FFMPEG_DEBUG = True
 
-def time2sec(search):
-    hh, mm, ss, cs =  search.group(1), search.group(2), search.group(3), search.group(4)
-    return int(hh)*3600 + int(mm)*60 + int(ss) + int(cs)/100.0
 
-class FFMPEG():
+def time2sec(search):
+    hh, mm, ss, cs = search.group(1), search.group(2), search.group(3), search.group(4)
+    return int(hh) * 3600 + int(mm) * 60 + int(ss) + int(cs) / 100.0
+
+
+class FFMPEG:
     def __init__(self, *args, **kwargs):
         if kwargs.get("debug", False):
             enable_ffmpeg_debug()
@@ -42,7 +41,7 @@ class FFMPEG():
 
     @property
     def is_running(self):
-        return bool(self.proc) and self.proc.poll() == None
+        return bool(self.proc) and self.proc.poll() is None
 
     @property
     def stdin(self):
@@ -64,11 +63,11 @@ class FFMPEG():
         self.reset_stderr()
         logging.debug("Executing", " ".join(self.cmd))
         self.proc = subprocess.Popen(
-                self.cmd,
-                stdin=stdin,
-                stdout=stdout,
-                stderr=stderr,
-            )
+            self.cmd,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
+        )
 
     def stop(self):
         if not self.proc:
@@ -91,7 +90,6 @@ class FFMPEG():
         self.error_log += self.stderr.read().decode("utf-8")
         if interrupted:
             raise KeyboardInterrupt
-
 
     def process(self, progress_handler=None):
         ch = self.proc.stderr.read(1)
@@ -122,15 +120,14 @@ class FFMPEG():
         return True
 
 
-
 def ffmpeg(
-        *args,
-        progress_handler=None,
-        stdin=subprocess.PIPE,
-        stdout=None,
-        stderr=subprocess.PIPE,
-        debug=False
-    ):
+    *args,
+    progress_handler=None,
+    stdin=subprocess.PIPE,
+    stdout=None,
+    stderr=subprocess.PIPE,
+    debug=False,
+):
     """
     FFMpeg wrapper with progress and error handling
 
@@ -163,10 +160,10 @@ def ffmpeg(
 
     ff = FFMPEG(*args, debug=debug)
     ff.start(
-            stdin=stdin,
-            stdout=stdout,
-            stderr=stderr,
-        )
+        stdin=stdin,
+        stdout=stdout,
+        stderr=stderr,
+    )
 
     ff.wait(progress_handler=progress_handler)
 

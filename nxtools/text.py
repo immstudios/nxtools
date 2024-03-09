@@ -8,7 +8,7 @@ __all__ = [
     "fract2float",
     "format_filesize",
     "EMAIL_REGEXP",
-    "GUID_REGEXP"
+    "GUID_REGEXP",
 ]
 
 import string
@@ -19,8 +19,7 @@ import unidecode
 EMAIL_REGEXP = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
 
 #: GUID/UUID regular expression
-GUID_REGEXP = \
-    r"^[\da-f]{8}-[\da-f]{4}-[1-5][\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$"
+GUID_REGEXP = r"^[\da-f]{8}-[\da-f]{4}-[1-5][\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$"
 
 default_slug_whitelist = string.ascii_letters + string.digits
 slug_separator_whitelist = " ,./\\;:!|*^#@~+-_="
@@ -28,8 +27,11 @@ slug_separator_whitelist = " ,./\\;:!|*^#@~+-_="
 
 def indent(src, length: int = 4):
     """Indent a multi-line text."""
-    return "\n".join([f"{length*' '}{s.rstrip()}" for s in src.split("\n")]) \
-        + "\n" if src.endswith("\n") else ""
+    return (
+        "\n".join([f"{length*' '}{s.rstrip()}" for s in src.split("\n")]) + "\n"
+        if src.endswith("\n")
+        else ""
+    )
 
 
 def unaccent(string: str) -> str:
@@ -86,8 +88,7 @@ def slugify(
         [ch if ch in slug_whitelist + " " else "" for ch in input_string]
     )
     elements = [
-        elm.strip() for elm in input_string.split(" ")
-        if len(elm.strip()) >= min_length
+        elm.strip() for elm in input_string.split(" ") if len(elm.strip()) >= min_length
     ]
     return set(elements) if make_set else separator.join(elements)
 
@@ -115,8 +116,8 @@ def format_filesize(value):
     """Return a human readable filesize for a given byte count."""
     if not value:
         return ""
-    for x in ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB']:
+    for x in ["bytes", "KB", "MB", "GB", "TB", "PB"]:
         if value < 1024.0:
-            return "%3.1f %s" % (value, x)
+            return f"{value:3.1f} {x}"
         value /= 1024.0
     return value

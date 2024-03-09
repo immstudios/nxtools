@@ -1,145 +1,153 @@
-"""nxtools logger."""
-
-__all__ = [
-    "Logging",
-    "logging",
-    "log_traceback",
-    "critical_error",
-    "log_to_file"
-]
-
-import functools
-import os
+import contextlib
+import logging as _logging
 import sys
 import time
 import traceback
 
-from .common import PLATFORM
+import colorama
+
 from .text import indent
 from .timeutils import format_time
 
-try:
-    from colorama import Fore, Style, init
-    init()
-    has_colorama = True
-except ModuleNotFoundError:
-    has_colorama = False
+colorama.init()
+
+SBB = colorama.Style.BRIGHT + colorama.Fore.BLACK
+SR = colorama.Style.RESET_ALL
+SN = colorama.Style.NORMAL
+
+TRACE = 0
+DEBUG = 10
+INFO = 20
+GOOD_NEWS = 25
+WARNING = 30
+ERROR = 40
+CRITICAL = 50
+
+LEVEL_WIDTH = 10
+
+FMT_COLORAMA = {
+    TRACE: SBB
+    + "{timestamp}"
+    + "TRACE".ljust(LEVEL_WIDTH)
+    + "{user} {message}"
+    + colorama.Style.RESET_ALL,
+    DEBUG: SBB
+    + "{timestamp}"
+    + colorama.Style.RESET_ALL
+    + colorama.Fore.BLUE
+    + "DEBUG".ljust(LEVEL_WIDTH)
+    + "{user} {message}"
+    + colorama.Style.RESET_ALL,
+    INFO: SBB
+    + "{timestamp}"
+    + colorama.Style.NORMAL
+    + colorama.Fore.WHITE
+    + "INFO ".ljust(LEVEL_WIDTH)
+    + colorama.Fore.RESET
+    + "{user} {message}"
+    + colorama.Style.RESET_ALL,
+    WARNING: SBB
+    + "{timestamp}"
+    + colorama.Style.NORMAL
+    + colorama.Fore.YELLOW
+    + "WARNING ".ljust(LEVEL_WIDTH)
+    + colorama.Fore.RESET
+    + "{user} {message}"
+    + colorama.Style.RESET_ALL,
+    ERROR: SBB
+    + "{timestamp}"
+    + colorama.Style.NORMAL
+    + colorama.Fore.RED
+    + "ERROR".ljust(LEVEL_WIDTH)
+    + colorama.Fore.RESET
+    + "{user} {message}"
+    + colorama.Style.RESET_ALL,
+    CRITICAL: SBB
+    + "{timestamp}"
+    + colorama.Style.NORMAL
+    + colorama.Fore.RED
+    + "CRITICAL ".ljust(LEVEL_WIDTH)
+    + "{user} {message}"
+    + colorama.Style.RESET_ALL,
+    GOOD_NEWS: SBB
+    + "{timestamp}"
+    + colorama.Style.NORMAL
+    + colorama.Fore.GREEN
+    + "GOOD NEWS ".ljust(LEVEL_WIDTH)
+    + colorama.Fore.RESET
+    + "{user} {message}"
+    + colorama.Style.RESET_ALL,
+}
 
 
-DEBUG, INFO, WARNING, ERROR, GOOD_NEWS = range(5)
-
-SBB = Style.BRIGHT + Fore.BLACK
-SR = Style.RESET_ALL
-SN = Style.NORMAL
-
-# Log handlers
-
-
-def null_handler(**kwargs):
-    return True
-
-
-def log_to_file(log_path):
-    """Log to file handler."""
-    def log_to_file_handler(path, **kwargs):
-        placeholders = {
-            "date": format_time(time.time(), "%Y-%m-%d")
-        }
-        path = path.format(**placeholders)
-        dirname, _ = os.path.split(path)
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
-
-        with open(path, "a") as f:
-            tstamp = format_time(time.time())
-            ltype = {
-                   0: "DEBUG    ",
-                   1: "INFO     ",
-                   2: "WARNING  ",
-                   3: "ERROR    ",
-                   4: "GOOD NEWS"
-                }[kwargs["message_type"]]
-            f.write(f"{tstamp}  {ltype}  {kwargs['message']}\n")
-    return functools.partial(log_to_file_handler, log_path)
-
-
-# Logging
-
-class Logging():
+class Logging:
     """nxtools universal logger."""
 
-    def __init__(self, user=""):
+    user: str | None = None
+    show_user: bool = True
+    show_time: bool = True
+
+    def __init__(self):
         self.show_time = True
         self.show_colors = True
-        self.user = user
         self.handlers = []
-        self.file = sys.stderr
 
-        self.formats_ansi = {
-            INFO      : "\033[1;30m{timestamp}\033[0m{type} {user} {message}",
-            DEBUG     : "\033[1;30m{timestamp}\033[0m\033[34m{type} {user} {message}\033[0m",
-            WARNING   : "\033[1;30m{timestamp}\033[0m\033[33m{type}\033[0m {user} {message}",
-            ERROR     : "\033[1;30m{timestamp}\033[0m\033[31m{type}\033[0m {user} {message}",
-            GOOD_NEWS : "\033[1;30m{timestamp}\033[0m\033[32m{type}\033[0m {user} {message}"
-        }
+    def install(self):
+        """Use this logger as the default logger.
 
-        self.formats_nocolor = {
-            DEBUG: "{timestamp}{type} {user} {message}",
-            INFO: "{timestamp}{type} {user} {message}",
-            WARNING: "{timestamp}{type} {user} {message}",
-            ERROR: "{timestamp}{type} {user} {message}",
-            GOOD_NEWS: "{timestamp}{type} {user} {message}"
-        }
+        This method installs the logger as the default logger
+        for the standard logging module. It unifies the logging
+        format, colorizes the output and adds a custom handler
+        support.
+        """
+        logger = _logging.getLogger()
+        logger.setLevel(DEBUG)
 
-        if has_colorama:
-            self.formats_colorama = {
-                DEBUG     : SBB + "{timestamp}" + Style.RESET_ALL + Fore.BLUE + "{type}" + "{user} {message}" + Style.RESET_ALL,
-                INFO      : SBB + "{timestamp}" + Style.NORMAL + Fore.WHITE  + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
-                WARNING   : SBB + "{timestamp}" + Style.NORMAL + Fore.YELLOW + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
-                ERROR     : SBB + "{timestamp}" + Style.NORMAL + Fore.RED    + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL,
-                GOOD_NEWS : SBB + "{timestamp}" + Style.NORMAL + Fore.GREEN  + "{type}"  + Fore.RESET + "{user} {message}" + Style.RESET_ALL
-            }
-        else:
-            self.formats_colorama = self.formats_nocolor
+        printer = self._send
+
+        class CustomHandler(_logging.Handler):
+            def emit(self, record):
+                log_message = self.format(record)
+                name = record.name
+                printer(record.levelno, log_message, user=name)
+
+        logger.addHandler(CustomHandler())
 
     def add_handler(self, handler):
         """Add a new logging handler."""
         if handler not in self.handlers:
             self.handlers.append(handler)
 
-    def _send(self, msgtype, *args, **kwargs):
+    def _send(self, level, *args, **kwargs):
         message = " ".join([str(arg) for arg in args])
         user = kwargs.get("user", self.user)
 
+        if user is None or not self.show_user:
+            user = ""
+        else:
+            user = f"{user:<15}"
+
+        if self.show_time:
+            timestamp = format_time(time.time()) + " "
+        else:
+            timestamp = ""
+
+        line = FMT_COLORAMA[level].format(
+            timestamp=timestamp,
+            user=user,
+            message=message,
+        )
+
+        with contextlib.suppress(Exception):
+            print(line, file=sys.stderr)
+
         if kwargs.get("handlers", True):
             for handler in self.handlers:
-                handler(user=self.user, message_type=msgtype, message=message)
+                handler(user=self.user, message_type=level, message=message)
 
-        ldata = {
-            "user": f" {user:<15}" if user else "",
-            "message": message,
-            "timestamp": format_time(time.time()) +
-            " " if self.show_time else "",
-            "type": {
-                DEBUG: "DEBUG     ",
-                INFO: "INFO      ",
-                WARNING: "WARNING   ",
-                ERROR: "ERROR     ",
-                GOOD_NEWS: "GOOD NEWS "
-            }[msgtype]
-        }
-
-        if self.show_colors and has_colorama:
-            fstring = self.formats_colorama[msgtype]
-        elif self.show_colors and PLATFORM == "unix":
-            fstring = self.formats_ansi[msgtype]
-        else:
-            fstring = self.formats_nocolor[msgtype]
-
-        try:
-            print(fstring.format(**ldata), file=self.file)
-        except Exception:
-            pass
+    def trace(self, *args, **kwargs):
+        """Log a debug message."""
+        self._send(TRACE, *args, **kwargs)
 
     def debug(self, *args, **kwargs):
         """Log a debug message."""
@@ -157,12 +165,13 @@ class Logging():
         """Log an error message."""
         self._send(ERROR, *args, **kwargs)
 
+    def critical(self, *args, **kwargs):
+        """Log a critical error message."""
+        self._send(CRITICAL, *args, **kwargs)
+
     def goodnews(self, *args, **kwargs):
-        """Log good news."""
+        """Log a good news message."""
         self._send(GOOD_NEWS, *args, **kwargs)
-
-
-logging = Logging()
 
 
 def log_traceback(message="Exception!", **kwargs):
@@ -178,3 +187,6 @@ def critical_error(message, return_code=1, **kwargs):
     logging.error(message, **kwargs)
     logging.debug("Critical error. Terminating program.")
     sys.exit(return_code)
+
+
+logging = Logging()
