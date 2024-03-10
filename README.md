@@ -3,6 +3,9 @@ nxtools
 
 nxtools is a set of various tools and helpers used by [Nebula](https://github.com/nebulabroadcast/nebula) and other software.
 
+**Warning** nxtools 2 (current develop) is not compatible with nxtools 1.x. 
+
+
 Installation
 ------------
 
