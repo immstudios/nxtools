@@ -1,14 +1,10 @@
-__all__ = [
-    "PLATFORM",
-    "find_binary",
-    "get_guid",
-    "xml",
-]
-
 import os
 import sys
 import uuid
+from typing import Literal
 from xml.etree import ElementTree
+
+from .logging import logging
 
 PLATFORM = "windows" if sys.platform == "win32" else "unix"
 
@@ -25,13 +21,18 @@ def xml(data: str) -> ElementTree.Element | None:
     return ElementTree.XML(data)
 
 
-def get_guid() -> str:
-    """Return a GUID
+def get_uuid(uuid_type: Literal[1, 4] = 1) -> str:
+    """Return an UUID of the specified type"""
+    if uuid_type == 1:
+        return str(uuid.uuid1())
+    elif uuid_type == 4:
+        return str(uuid.uuid4())
 
-    Returns:
-        str: GUID
-    """
-    return str(uuid.uuid1())
+
+def get_guid() -> str:
+    """Return a GUID"""
+    logging.warning("get_guid() is deprecated, use get_uuid(4) instead")
+    return get_uuid(4).upper()
 
 
 def find_binary(file_name: str) -> str | None:
@@ -54,3 +55,4 @@ def find_binary(file_name: str) -> str | None:
             fpath = os.path.join(path, file_name)
             if os.path.exists(fpath):
                 return fpath
+    raise FileNotFoundError(f"Could not find {file_name}")

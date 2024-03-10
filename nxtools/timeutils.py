@@ -55,6 +55,7 @@ def tc2s(tc: str, base: float = 25) -> float:
     """
     tc = tc.replace(";", ":")
     hh, mm, ss, ff = (int(e) for e in tc.split(":"))
+    res: float
     res = hh * 3600
     res += mm * 60
     res += ss

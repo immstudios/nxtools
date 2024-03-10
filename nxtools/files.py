@@ -328,7 +328,7 @@ def file_to_title(file_name: str) -> str:
     base = base.replace("_", " ").replace("-", " - ").strip()
     elms = []
     capd = False
-    for _i, elm in enumerate(base.split(" ")):
+    for elm in base.split(" "):
         if not elm:
             continue
         if not capd and not (elm.isdigit() or elm.upper() == elm):

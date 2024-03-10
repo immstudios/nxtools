@@ -24,6 +24,7 @@ ERROR = 40
 CRITICAL = 50
 
 LEVEL_WIDTH = 10
+USER_WIDTH = 15
 
 FMT_COLORAMA = {
     TRACE: SBB
@@ -125,7 +126,7 @@ class Logging:
         if user is None or not self.show_user:
             user = ""
         else:
-            user = f"{user:<15}"
+            user = user.ljust(USER_WIDTH)
 
         if self.show_time:
             timestamp = format_time(time.time()) + " "

@@ -4,8 +4,6 @@ __all__ = [
     "get_guid",
     "xml",
     # text
-    "EMAIL_REGEXP",
-    "GUID_REGEXP",
     "format_filesize",
     "fract2float",
     "indent",
@@ -35,8 +33,6 @@ from .logging import critical_error, log_traceback, logging
 from .media.ffmpeg import FFMPEG, ffmpeg
 from .media.ffprobe import ffprobe
 from .text import (
-    EMAIL_REGEXP,
-    GUID_REGEXP,
     format_filesize,
     fract2float,
     indent,

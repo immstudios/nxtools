@@ -1,25 +1,6 @@
-"""String formatting utilities."""
-
-__all__ = [
-    "indent",
-    "unaccent",
-    "slugify",
-    "string2color",
-    "fract2float",
-    "format_filesize",
-    "EMAIL_REGEXP",
-    "GUID_REGEXP",
-]
-
 import string
-
 import unidecode
 
-#: E-mail address regular expression
-EMAIL_REGEXP = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
-
-#: GUID/UUID regular expression
-GUID_REGEXP = r"^[\da-f]{8}-[\da-f]{4}-[1-5][\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$"
 
 default_slug_whitelist = string.ascii_letters + string.digits
 slug_separator_whitelist = " ,./\\;:!|*^#@~+-_="
